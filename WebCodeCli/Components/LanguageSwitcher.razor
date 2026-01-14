@@ -65,6 +65,8 @@
 
     private async Task ChangeLanguage(string languageCode)
     {
+        _isOpen = false;
+        
         if (_currentLanguage != languageCode)
         {
             _currentLanguage = languageCode;
@@ -77,8 +79,6 @@
             // Reload the page to apply new language
             await JSRuntime.InvokeVoidAsync("location.reload");
         }
-        
-        _isOpen = false;
     }
 
     private string GetLanguageDisplayName(string languageCode)

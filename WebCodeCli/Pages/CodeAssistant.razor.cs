@@ -4882,8 +4882,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     /// </summary>
     private void OnLanguageChanged(string languageCode)
     {
-        // 页面将重新加载，无需额外操作
-        Console.WriteLine($"Language changed to: {languageCode}");
+        // Page will reload automatically, no additional action needed
     }
 
     #endregion

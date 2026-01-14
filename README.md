@@ -201,7 +201,17 @@ WebCodeCli/
 - [Codex 配置说明](./docs/Codex配置说明.md)
 - [环境变量配置](./docs/环境变量配置功能说明.md)
 
-## 🔧 使用场景
+## � 推荐 Skills
+
+提升 AI 编程助手能力的优秀 Skills 资源：
+
+- [**planning-with-files**](https://github.com/OthmanAdi/planning-with-files) - 基于文件的项目规划与任务管理技能
+- [**Anthropic Skills**](https://github.com/anthropics/skills) - Anthropic 官方 Skills 集合，提供多种 Claude 增强能力
+- [**UI/UX Pro Max Skill**](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) - 专业的 UI/UX 设计与开发技能
+
+> 💡 **提示**：这些 Skills 可以与 Claude Code CLI 等 AI 助手配合使用，增强代码生成、项目规划、UI 设计等能力。
+
+## �🔧 使用场景
 
 ### 1. 移动办公
 在手机上通过浏览器远程控制服务器上的 AI 编程助手，随时处理代码任务。

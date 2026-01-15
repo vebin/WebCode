@@ -298,7 +298,59 @@ public class ClaudeCodeAdapter : ICliToolAdapter
         outputEvent.Title = "消息";
         outputEvent.ItemType = "agent_message";
 
-        // 提取消息内容
+        // 提取会话ID
+        if (root.TryGetProperty("session_id", out var sessionIdElement))
+        {
+            outputEvent.SessionId = sessionIdElement.GetString();
+        }
+
+        // 检查是否有 role 字段在顶层（表示这是一个类似 assistant/user 的消息结构）
+        var role = GetStringProperty(root, "role");
+        var isAssistant = !string.IsNullOrEmpty(role) && 
+                          role.Equals("assistant", StringComparison.OrdinalIgnoreCase);
+
+        // 如果 content 是数组，按 assistant/user 事件的方式处理
+        if (root.TryGetProperty("content", out var contentProp) && contentProp.ValueKind == JsonValueKind.Array)
+        {
+            // 1) 优先识别 tool_use/tool_result
+            foreach (var item in contentProp.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object) continue;
+                var itemType = GetStringProperty(item, "type") ?? string.Empty;
+
+                if (string.Equals(itemType, "tool_use", StringComparison.OrdinalIgnoreCase))
+                {
+                    outputEvent.EventType = "tool_use";
+                    ParseToolUseFromContentItem(item, outputEvent);
+                    return;
+                }
+
+                if (string.Equals(itemType, "tool_result", StringComparison.OrdinalIgnoreCase))
+                {
+                    outputEvent.EventType = "tool_result";
+                    ParseToolResultFromContentItem(item, outputEvent);
+                    return;
+                }
+            }
+
+            // 2) 提取文本内容（包括 text 和 thinking 类型）
+            var text = ExtractTextFromContentArray(contentProp);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                outputEvent.EventType = isAssistant ? "assistant" : "message";
+                outputEvent.Title = isAssistant ? "助手消息" : "消息";
+                outputEvent.Content = text.TrimEnd();
+                outputEvent.IsUnknown = false;
+                return;
+            }
+
+            // 3) 兜底：数组中没有可识别内容
+            outputEvent.Content = "消息（无可显示内容）";
+            outputEvent.IsUnknown = false;
+            return;
+        }
+
+        // 原有逻辑：提取字符串类型的消息内容
         var content = GetStringProperty(root, "content") ??
                       GetStringProperty(root, "text") ??
                       GetStringProperty(root, "message");
@@ -306,12 +358,6 @@ public class ClaudeCodeAdapter : ICliToolAdapter
         if (!string.IsNullOrEmpty(content))
         {
             outputEvent.Content = content;
-        }
-
-        // 提取会话ID
-        if (root.TryGetProperty("session_id", out var sessionIdElement))
-        {
-            outputEvent.SessionId = sessionIdElement.GetString();
         }
     }
 
@@ -566,12 +612,32 @@ public class ClaudeCodeAdapter : ICliToolAdapter
         {
             if (item.ValueKind != JsonValueKind.Object) continue;
             var itemType = GetStringProperty(item, "type") ?? string.Empty;
-            if (!string.Equals(itemType, "text", StringComparison.OrdinalIgnoreCase)) continue;
-
-            var text = GetStringProperty(item, "text");
-            if (!string.IsNullOrEmpty(text))
+            
+            // 处理 type="text" 的内容
+            if (string.Equals(itemType, "text", StringComparison.OrdinalIgnoreCase))
             {
-                sb.Append(text);
+                var text = GetStringProperty(item, "text");
+                if (!string.IsNullOrEmpty(text))
+                {
+                    sb.Append(text);
+                }
+                continue;
+            }
+            
+            // 处理 type="thinking" 的内容
+            if (string.Equals(itemType, "thinking", StringComparison.OrdinalIgnoreCase))
+            {
+                var thinking = GetStringProperty(item, "thinking");
+                if (!string.IsNullOrEmpty(thinking))
+                {
+                    // 添加思考内容，可以选择性地添加标识
+                    if (sb.Length > 0)
+                    {
+                        sb.AppendLine();
+                    }
+                    sb.Append(thinking);
+                }
+                continue;
             }
         }
         return sb.ToString();

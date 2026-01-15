@@ -37,6 +37,11 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     [Inject] private IFrontendProjectDetector FrontendProjectDetector { get; set; } = default!;
     [Inject] private IDevServerManager DevServerManager { get; set; } = default!;
     [Inject] private WebCodeCli.Domain.Domain.Service.ISkillService SkillService { get; set; } = default!;
+    [Inject] private ILocalizationService L { get; set; } = default!;
+    
+    // 本地化翻译缓存
+    private Dictionary<string, string> _translations = new();
+    private string _currentLanguage = "zh-CN";
     
     private List<CliToolConfig> _availableTools = new();
     private string _selectedToolId = string.Empty;
@@ -163,6 +168,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     // 用户信息
     private bool _showUserInfo = false;
     private string _currentUsername = string.Empty;
+    private bool _showUserDropdown = false; // 用户头像下拉菜单
     
     // 键盘事件状态
     private bool _isKeyDownEnterWithoutShift = false;
@@ -241,6 +247,17 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        // 初始化本地化
+        try
+        {
+            _currentLanguage = await L.GetCurrentLanguageAsync();
+            await LoadTranslationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"初始化本地化失败: {ex.Message}");
+        }
+        
         // 检查认证状态
         if (AuthenticationService.IsAuthenticationEnabled())
         {
@@ -298,6 +315,14 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         {
             try
             {
+                // 首次渲染后确保本地化资源已加载（避免 JS 互操作时机问题）
+                if (_translations.Count == 0)
+                {
+                    _currentLanguage = await L.GetCurrentLanguageAsync();
+                    await LoadTranslationsAsync();
+                    StateHasChanged();
+                }
+
                 // 设置iframe自动调整高度
                 await JSRuntime.InvokeVoidAsync("setupIframeAutoResize");
             }
@@ -2855,6 +2880,37 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
             Console.WriteLine($"退出登录失败: {ex.Message}");
         }
     }
+    
+    // 用户头像下拉菜单控制方法
+    private void ToggleUserDropdown()
+    {
+        _showUserDropdown = !_showUserDropdown;
+        StateHasChanged();
+    }
+    
+    private void CloseUserDropdown()
+    {
+        _showUserDropdown = false;
+        StateHasChanged();
+    }
+    
+    private void OpenEnvConfigFromDropdown()
+    {
+        _showUserDropdown = false;
+        OpenEnvConfig();
+    }
+    
+    private async Task HandleLogoutFromDropdown()
+    {
+        _showUserDropdown = false;
+        await HandleLogout();
+    }
+    
+    private void OnLanguageChangedFromDropdown(string languageCode)
+    {
+        _showUserDropdown = false;
+        OnLanguageChanged(languageCode);
+    }
 
     private void TogglePreviewPanel()
     {
@@ -4876,6 +4932,121 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     {
         return path?.Replace("\\", "/") ?? string.Empty;
     }
+
+    /// <summary>
+    /// 处理语言切换事件
+    /// </summary>
+    private void OnLanguageChanged(string languageCode)
+    {
+        // 页面会刷新，但这里兜底强制刷新翻译缓存
+        _currentLanguage = languageCode;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await L.ReloadTranslationsAsync();
+                await LoadTranslationsAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"语言切换后刷新翻译失败: {ex.Message}");
+            }
+        });
+    }
+
+    #region 本地化辅助方法
+
+    /// <summary>
+    /// 加载翻译资源
+    /// </summary>
+    private async Task LoadTranslationsAsync()
+    {
+        try
+        {
+            var allTranslations = await L.GetAllTranslationsAsync(_currentLanguage);
+            _translations = FlattenTranslations(allTranslations);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"加载翻译资源失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 将嵌套的翻译字典展平为点分隔的键
+    /// </summary>
+    private Dictionary<string, string> FlattenTranslations(Dictionary<string, object> source, string prefix = "")
+    {
+        var result = new Dictionary<string, string>();
+        
+        foreach (var kvp in source)
+        {
+            var key = string.IsNullOrEmpty(prefix) ? kvp.Key : $"{prefix}.{kvp.Key}";
+            
+            if (kvp.Value is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Object)
+                {
+                    var nested = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonElement.GetRawText());
+                    if (nested != null)
+                    {
+                        foreach (var item in FlattenTranslations(nested, key))
+                        {
+                            result[item.Key] = item.Value;
+                        }
+                    }
+                }
+                else if (jsonElement.ValueKind == JsonValueKind.String)
+                {
+                    result[key] = jsonElement.GetString() ?? key;
+                }
+            }
+            else if (kvp.Value is Dictionary<string, object> dict)
+            {
+                foreach (var item in FlattenTranslations(dict, key))
+                {
+                    result[item.Key] = item.Value;
+                }
+            }
+            else if (kvp.Value is string str)
+            {
+                result[key] = str;
+            }
+        }
+        
+        return result;
+    }
+
+    /// <summary>
+    /// 获取翻译文本
+    /// </summary>
+    private string T(string key)
+    {
+        if (_translations.TryGetValue(key, out var translation))
+        {
+            return translation;
+        }
+        
+        // 返回键的最后一部分作为默认值
+        var parts = key.Split('.');
+        return parts.Length > 0 ? parts[^1] : key;
+    }
+
+    /// <summary>
+    /// 获取翻译文本（带参数）
+    /// </summary>
+    private string T(string key, params (string name, string value)[] parameters)
+    {
+        var text = T(key);
+        foreach (var (name, value) in parameters)
+        {
+            text = text.Replace($"{{{name}}}", value);
+        }
+        return text;
+    }
+
+    #endregion
 
     #endregion
 }

@@ -64,19 +64,19 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
-                        <span class="hidden sm:inline">添加</span>
+                        <span class="hidden sm:inline">@T("templateLibrary.addTemplate")</span>
                     </button>
                     <button @onclick="ExportTemplates" class="btn-default flex items-center gap-2 text-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
-                        <span class="hidden sm:inline">导出</span>
+                        <span class="hidden sm:inline">@T("templateLibrary.exportTemplates")</span>
                     </button>
                     <label class="btn-default flex items-center gap-2 text-sm cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
-                        <span class="hidden sm:inline">导入</span>
+                        <span class="hidden sm:inline">@T("templateLibrary.importTemplates")</span>
                         <InputFile OnChange="ImportTemplates" accept=".json" class="hidden" />
                     </label>
                 </div>
@@ -104,7 +104,7 @@
                                     </div>
                                     <button @onclick="() => ToggleFavorite(template)" 
                                             class="flex-shrink-0 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                                            title="@(template.IsFavorite ? "取消收藏" : "收藏")">
+                                            title="@(template.IsFavorite ? T("templateLibrary.unfavorite") : T("templateLibrary.favorite"))">
                                         @if (template.IsFavorite)
                                         {
                                             <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
@@ -130,12 +130,12 @@
                                     </span>
                                     @if (template.IsCustom)
                                     {
-                                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">自定义</span>
+                                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">@GetCategoryName("custom")</span>
                                     }
                                     @if (template.Variables.Any())
                                     {
                                         <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                                            @template.Variables.Count 个变量
+                                            @T("templateLibrary.variableCount", ("count", template.Variables.Count.ToString()))
                                         </span>
                                     }
                                 </div>
@@ -147,20 +147,20 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                         </svg>
-                                        <span>使用</span>
+                                        <span>@T("templateLibrary.useTemplate")</span>
                                     </button>
                                     @if (template.IsCustom)
                                     {
                                         <button @onclick="() => ShowEditTemplateDialog(template)" 
                                                 class="p-2 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200 hover:border-blue-300"
-                                                title="编辑">
+                                            title="@T("common.edit")">
                                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
                                         <button @onclick="() => DeleteTemplate(template)" 
                                                 class="p-2 hover:bg-red-50 rounded-lg transition-colors border border-gray-200 hover:border-red-300"
-                                                title="删除">
+                                            title="@T("common.delete")">
                                             <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
@@ -179,7 +179,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <p class="text-gray-500">暂无模板</p>
+                        <p class="text-gray-500">@T("templateLibrary.noTemplates")</p>
                     </div>
                 }
             </div>
@@ -194,7 +194,7 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden transform transition-all" @onclick:stopPropagation="true">
             <div class="flex items-center justify-between p-6 border-b-2 border-gray-200 bg-gray-50">
                 <h3 class="text-xl font-bold text-gray-800">
-                    @(_editingTemplate == null ? "添加模板" : "编辑模板")
+                    @(_editingTemplate == null ? T("templateLibrary.addTemplate") : T("templateLibrary.editTemplate"))
                 </h3>
                 <button @onclick="CloseTemplateDialog" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,17 +206,17 @@
             <div class="p-6 overflow-y-auto space-y-4" style="max-height: calc(90vh - 200px);">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="label">标题 *</label>
-                        <input @bind="_templateForm.Title" type="text" class="input-field" placeholder="例如: 优化代码" maxlength="100" />
+                        <label class="label">@T("templateLibrary.templateName") *</label>
+                        <input @bind="_templateForm.Title" type="text" class="input-field" placeholder="@T("templateLibrary.templateNamePlaceholder")" maxlength="100" />
                     </div>
                     <div>
-                        <label class="label">图标 (Emoji) *</label>
+                        <label class="label">@T("templateLibrary.templateIcon") *</label>
                         <input @bind="_templateForm.Icon" type="text" class="input-field" placeholder="🔧" maxlength="10" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="label">分类 *</label>
+                    <label class="label">@T("templateLibrary.templateCategory") *</label>
                     <select @bind="_templateForm.Category" class="input-field">
                         <option value="optimization">@GetCategoryName("optimization")</option>
                         <option value="documentation">@GetCategoryName("documentation")</option>
@@ -229,25 +229,25 @@
                 </div>
 
                 <div>
-                    <label class="label">模板内容 *</label>
-                    <textarea @bind="_templateForm.Content" rows="6" class="input-field" placeholder="输入模板内容...使用 {{变量名}} 定义变量" maxlength="2000"></textarea>
-                    <p class="text-xs text-gray-500 mt-1">提示：使用 {{code}}, {{language}}, {{framework}} 等变量</p>
+                    <label class="label">@T("templateLibrary.templateContent") *</label>
+                    <textarea @bind="_templateForm.Content" rows="6" class="input-field" placeholder="@T("templateLibrary.templateContentPlaceholder")" maxlength="2000"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">@T("templateLibrary.variableExamples")</p>
                 </div>
 
                 <div>
-                    <label class="label">描述（可选）</label>
-                    <textarea @bind="_templateForm.Description" rows="2" class="input-field" placeholder="模板说明..." maxlength="500"></textarea>
+                    <label class="label">@T("templateLibrary.description")</label>
+                    <textarea @bind="_templateForm.Description" rows="2" class="input-field" placeholder="@T("templateLibrary.descriptionPlaceholder")" maxlength="500"></textarea>
                 </div>
             </div>
 
             <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
                 <button @onclick="CloseTemplateDialog" class="btn-default">
-                    取消
+                    @T("common.cancel")
                 </button>
                 <button @onclick="SaveTemplate" 
                         disabled="@(string.IsNullOrWhiteSpace(_templateForm.Title) || string.IsNullOrWhiteSpace(_templateForm.Content) || string.IsNullOrWhiteSpace(_templateForm.Icon))"
                         class="btn-primary">
-                    保存
+                    @T("common.save")
                 </button>
             </div>
         </div>

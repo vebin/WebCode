@@ -1,7 +1,9 @@
 @using WebCodeCli.Domain.Domain.Model
 @using WebCodeCli.Domain.Domain.Service
+@using System.Text.Json
 @inject IFileSearchService FileSearchService
 @inject ICliExecutorService CliExecutorService
+@inject ILocalizationService L
 
 <div class="h-full flex flex-col bg-white">
     <!-- 头部：搜索表单 -->
@@ -10,7 +12,7 @@
         @if (!string.IsNullOrEmpty(_debugMessage))
         {
             <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 px-3 py-2 rounded text-xs">
-                <strong>调试:</strong> @_debugMessage
+                <strong>@T("fileSearch.debugLabel"):</strong> @_debugMessage
             </div>
         }
         
@@ -20,7 +22,7 @@
                    @bind="_searchTerm" 
                    @bind:event="oninput"
                    @onkeydown="HandleKeyDown"
-                   placeholder="输入搜索内容..."
+                   placeholder="@T("fileSearch.searchPlaceholder")"
                    class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" />
             <button @onclick="PerformSearch" 
                     disabled="@_isSearching"
@@ -35,7 +37,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 }
-                搜索
+                @T("common.search")
             </button>
         </div>
         
@@ -43,23 +45,23 @@
         <div class="flex flex-wrap items-center gap-3 text-sm">
             <label class="flex items-center gap-1.5 cursor-pointer">
                 <input type="checkbox" @bind="_options.CaseSensitive" class="rounded" />
-                <span>区分大小写</span>
+                <span>@T("fileSearch.caseSensitive")</span>
             </label>
             <label class="flex items-center gap-1.5 cursor-pointer">
                 <input type="checkbox" @bind="_options.WholeWord" class="rounded" />
-                <span>全词匹配</span>
+                <span>@T("fileSearch.wholeWord")</span>
             </label>
             <label class="flex items-center gap-1.5 cursor-pointer">
                 <input type="checkbox" @bind="_options.UseRegex" class="rounded" />
-                <span>正则表达式</span>
+                <span>@T("fileSearch.regex")</span>
             </label>
             
             <div class="flex items-center gap-2 ml-auto">
-                <label class="text-gray-600">文件类型:</label>
+                  <label class="text-gray-600">@T("fileSearch.fileType"):</label>
                 <input type="text" 
                        @bind="_fileTypeFilter" 
                        @bind:event="oninput"
-                       placeholder=".cs,.razor,.js"
+                      placeholder="@T("fileSearch.fileTypePlaceholder")"
                        class="px-2 py-1 border border-gray-200 rounded text-xs w-32" />
             </div>
         </div>
@@ -76,8 +78,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
-                <p class="text-base font-semibold text-gray-600">输入搜索内容</p>
-                <p class="text-sm mt-2 text-gray-500">支持普通文本搜索和正则表达式搜索</p>
+                <p class="text-base font-semibold text-gray-600">@T("fileSearch.initialTitle")</p>
+                <p class="text-sm mt-2 text-gray-500">@T("fileSearch.initialDesc")</p>
             </div>
         }
         else if (!_searchResults.Any())
@@ -89,8 +91,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                 </div>
-                <p class="text-base font-semibold text-gray-600">未找到匹配结果</p>
-                <p class="text-sm mt-2 text-gray-500">尝试使用不同的搜索词或调整搜索选项</p>
+                <p class="text-base font-semibold text-gray-600">@T("fileSearch.noResultsTitle")</p>
+                <p class="text-sm mt-2 text-gray-500">@T("fileSearch.noResultsDesc")</p>
             </div>
         }
         else
@@ -99,10 +101,10 @@
             <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-gray-700">
-                        找到 <span class="font-bold text-gray-900">@_searchResults.Count</span> 个匹配结果
+                        @T("fileSearch.resultsSummary", ("count", _searchResults.Count.ToString()))
                     </span>
                     <span class="text-gray-500">
-                        共 <span class="font-semibold">@_searchResults.Select(r => r.FilePath).Distinct().Count()</span> 个文件
+                        @T("fileSearch.filesSummary", ("count", _searchResults.Select(r => r.FilePath).Distinct().Count().ToString()))
                     </span>
                 </div>
             </div>
@@ -120,7 +122,7 @@
                                 </svg>
                                 <span class="font-semibold text-gray-800 text-sm">@fileGroup.Key</span>
                             </div>
-                            <span class="text-xs text-gray-500">@fileGroup.Count() 个匹配</span>
+                            <span class="text-xs text-gray-500">@T("fileSearch.matchesInFile", ("count", fileGroup.Count().ToString()))</span>
                         </div>
                         
                         <!-- 匹配行列表 -->
@@ -155,7 +157,7 @@
                             @if (fileGroup.Count() > 10)
                             {
                                 <div class="px-4 py-2 bg-gray-50 text-center text-xs text-gray-500">
-                                    还有 @(fileGroup.Count() - 10) 个匹配未显示
+                                    @T("fileSearch.moreMatches", ("count", (fileGroup.Count() - 10).ToString()))
                                 </div>
                             }
                         </div>
@@ -177,24 +179,28 @@
     private bool _isSearching = false;
     private string _debugMessage = string.Empty;
 
-    protected override void OnInitialized()
+    // 本地化相关
+    private Dictionary<string, string> _translations = new();
+    private string _currentLanguage = "zh-CN";
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await LoadTranslationsAsync();
         Console.WriteLine($"[FileSearchPanel] 组件已初始化，SessionId: {SessionId}");
-        _debugMessage = $"搜索面板已加载，SessionId: {SessionId}";
+        _debugMessage = T("fileSearch.debugLoaded", ("id", SessionId));
     }
 
     private async Task PerformSearch()
     {
         Console.WriteLine($"[FileSearchPanel] PerformSearch 被调用，搜索词: '{_searchTerm}'");
-        _debugMessage = $"开始搜索: '{_searchTerm}'";
+        _debugMessage = T("fileSearch.debugSearching", ("term", _searchTerm));
         StateHasChanged();
         await Task.Delay(10); // 确保UI更新
         
         if (string.IsNullOrWhiteSpace(_searchTerm))
         {
             Console.WriteLine("[FileSearchPanel] 搜索词为空，返回");
-            _debugMessage = "❌ 搜索词为空，请输入搜索内容";
+            _debugMessage = T("fileSearch.debugEmpty");
             StateHasChanged();
             return;
         }
@@ -207,13 +213,13 @@
         {
             var workspacePath = CliExecutorService.GetSessionWorkspacePath(SessionId);
             Console.WriteLine($"[FileSearchPanel] 工作区路径: {workspacePath}");
-            _debugMessage = $"工作区路径: {workspacePath}";
+            _debugMessage = T("fileSearch.debugWorkspacePath", ("path", workspacePath));
             StateHasChanged();
             
             if (string.IsNullOrEmpty(workspacePath) || !Directory.Exists(workspacePath))
             {
                 Console.WriteLine($"[FileSearchPanel] 工作区路径无效或不存在");
-                _debugMessage = $"❌ 工作区路径无效或不存在: {workspacePath}";
+                _debugMessage = T("fileSearch.debugWorkspaceInvalid", ("path", workspacePath));
                 _searchResults = new List<SearchResult>();
                 return;
             }
@@ -226,26 +232,26 @@
             if (_options.UseRegex)
             {
                 Console.WriteLine("[FileSearchPanel] 使用正则表达式搜索");
-                _debugMessage = "正在使用正则表达式搜索...";
+                _debugMessage = T("fileSearch.debugRegexSearch");
                 StateHasChanged();
                 _searchResults = await FileSearchService.SearchByRegexAsync(workspacePath, _searchTerm, _options);
             }
             else
             {
                 Console.WriteLine("[FileSearchPanel] 使用普通文本搜索");
-                _debugMessage = "正在搜索文件内容...";
+                _debugMessage = T("fileSearch.debugTextSearch");
                 StateHasChanged();
                 _searchResults = await FileSearchService.SearchInFilesAsync(workspacePath, _searchTerm, _options);
             }
             
             Console.WriteLine($"[FileSearchPanel] 搜索完成，找到 {_searchResults?.Count ?? 0} 个结果");
-            _debugMessage = $"✅ 搜索完成，找到 {_searchResults?.Count ?? 0} 个匹配项";
+            _debugMessage = T("fileSearch.debugCompleted", ("count", (_searchResults?.Count ?? 0).ToString()));
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[FileSearchPanel] 搜索失败: {ex.Message}");
             Console.WriteLine($"[FileSearchPanel] 异常堆栈: {ex.StackTrace}");
-            _debugMessage = $"❌ 搜索失败: {ex.Message}";
+            _debugMessage = T("fileSearch.debugFailed", ("message", ex.Message));
             _searchResults = new List<SearchResult>();
         }
         finally
@@ -298,5 +304,86 @@
 
         return new MarkupString(html.ToString());
     }
+
+    #region 本地化辅助方法
+
+    private async Task LoadTranslationsAsync()
+    {
+        try
+        {
+            _currentLanguage = await L.GetCurrentLanguageAsync();
+            var allTranslations = await L.GetAllTranslationsAsync(_currentLanguage);
+            _translations = FlattenTranslations(allTranslations);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[文件搜索] 加载翻译资源失败: {ex.Message}");
+        }
+    }
+
+    private Dictionary<string, string> FlattenTranslations(Dictionary<string, object> source, string prefix = "")
+    {
+        var result = new Dictionary<string, string>();
+
+        foreach (var kvp in source)
+        {
+            var key = string.IsNullOrEmpty(prefix) ? kvp.Key : $"{prefix}.{kvp.Key}";
+
+            if (kvp.Value is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Object)
+                {
+                    var nested = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonElement.GetRawText());
+                    if (nested != null)
+                    {
+                        foreach (var item in FlattenTranslations(nested, key))
+                        {
+                            result[item.Key] = item.Value;
+                        }
+                    }
+                }
+                else if (jsonElement.ValueKind == JsonValueKind.String)
+                {
+                    result[key] = jsonElement.GetString() ?? key;
+                }
+            }
+            else if (kvp.Value is Dictionary<string, object> dict)
+            {
+                foreach (var item in FlattenTranslations(dict, key))
+                {
+                    result[item.Key] = item.Value;
+                }
+            }
+            else if (kvp.Value is string str)
+            {
+                result[key] = str;
+            }
+        }
+
+        return result;
+    }
+
+    private string T(string key)
+    {
+        if (_translations.TryGetValue(key, out var translation))
+        {
+            return translation;
+        }
+
+        var parts = key.Split('.');
+        return parts.Length > 0 ? parts[^1] : key;
+    }
+
+    private string T(string key, params (string name, string value)[] parameters)
+    {
+        var text = T(key);
+        foreach (var (name, value) in parameters)
+        {
+            text = text.Replace($"{{{name}}}", value);
+        }
+        return text;
+    }
+
+    #endregion
 }
 

@@ -4,12 +4,14 @@ using Microsoft.JSInterop;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using WebCodeCli.Domain.Domain.Model;
+using WebCodeCli.Domain.Domain.Service;
 
 namespace WebCodeCli.Components;
 
 public partial class TemplateLibraryModal : ComponentBase
 {
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private ILocalizationService L { get; set; } = default!;
 
     [Parameter] public EventCallback<PromptTemplate> OnTemplateSelected { get; set; }
 
@@ -23,8 +25,17 @@ public partial class TemplateLibraryModal : ComponentBase
     private PromptTemplate? _editingTemplate = null;
     private TemplateFormModel _templateForm = new();
 
-    private const string LocalizedTitle = "模板库";
-    private const string LocalizedSearch = "搜索模板...";
+    // 本地化相关
+    private Dictionary<string, string> _translations = new();
+    private string _currentLanguage = "zh-CN";
+
+    private string LocalizedTitle => T("templateLibrary.title");
+    private string LocalizedSearch => T("templateLibrary.search");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTranslationsAsync();
+    }
 
     public async Task OpenModal()
     {
@@ -342,19 +353,101 @@ public partial class TemplateLibraryModal : ComponentBase
 
     private string GetCategoryName(string category)
     {
-        return category switch
-        {
-            "all" => "全部",
-            "optimization" => "代码优化",
-            "documentation" => "文档",
-            "debugging" => "调试",
-            "refactoring" => "重构",
-            "testing" => "测试",
-            "review" => "审查",
-            "custom" => "自定义",
-            _ => category
-        };
+        return T($"templateLibrary.categories.{category}");
     }
+
+    #region 本地化辅助方法
+
+    /// <summary>
+    /// 加载翻译资源
+    /// </summary>
+    private async Task LoadTranslationsAsync()
+    {
+        try
+        {
+            _currentLanguage = await L.GetCurrentLanguageAsync();
+            var allTranslations = await L.GetAllTranslationsAsync(_currentLanguage);
+            _translations = FlattenTranslations(allTranslations);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[模板库] 加载翻译资源失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 将嵌套的翻译字典展平为点分隔的键
+    /// </summary>
+    private Dictionary<string, string> FlattenTranslations(Dictionary<string, object> source, string prefix = "")
+    {
+        var result = new Dictionary<string, string>();
+
+        foreach (var kvp in source)
+        {
+            var key = string.IsNullOrEmpty(prefix) ? kvp.Key : $"{prefix}.{kvp.Key}";
+
+            if (kvp.Value is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Object)
+                {
+                    var nested = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonElement.GetRawText());
+                    if (nested != null)
+                    {
+                        foreach (var item in FlattenTranslations(nested, key))
+                        {
+                            result[item.Key] = item.Value;
+                        }
+                    }
+                }
+                else if (jsonElement.ValueKind == JsonValueKind.String)
+                {
+                    result[key] = jsonElement.GetString() ?? key;
+                }
+            }
+            else if (kvp.Value is Dictionary<string, object> dict)
+            {
+                foreach (var item in FlattenTranslations(dict, key))
+                {
+                    result[item.Key] = item.Value;
+                }
+            }
+            else if (kvp.Value is string str)
+            {
+                result[key] = str;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// 获取翻译文本
+    /// </summary>
+    private string T(string key)
+    {
+        if (_translations.TryGetValue(key, out var translation))
+        {
+            return translation;
+        }
+
+        var parts = key.Split('.');
+        return parts.Length > 0 ? parts[^1] : key;
+    }
+
+    /// <summary>
+    /// 获取翻译文本（带参数）
+    /// </summary>
+    private string T(string key, params (string name, string value)[] parameters)
+    {
+        var text = T(key);
+        foreach (var (name, value) in parameters)
+        {
+            text = text.Replace($"{{{name}}}", value);
+        }
+        return text;
+    }
+
+    #endregion
 
     private class TemplateFormModel
     {

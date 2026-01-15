@@ -1,8 +1,10 @@
 @using WebCodeCli.Domain.Domain.Model
 @using WebCodeCli.Domain.Domain.Service
+@using System.Text.Json
 @implements IDisposable
 @inject IFileMonitorService FileMonitorService
 @inject ICliExecutorService CliExecutorService
+@inject ILocalizationService L
 
 <div class="h-full flex flex-col bg-white">
     <!-- 头部：控制栏 -->
@@ -16,7 +18,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <span>停止监控</span>
+                        <span>@T("fileMonitor.stopMonitoring")</span>
                     }
                     else
                     {
@@ -24,7 +26,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <span>开始监控</span>
+                        <span>@T("fileMonitor.startMonitoring")</span>
                     }
                 </button>
                 
@@ -32,7 +34,7 @@
                 {
                     <span class="flex items-center gap-1.5 text-sm text-green-600">
                         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        <span class="font-semibold">监控中</span>
+                        <span class="font-semibold">@T("fileMonitor.monitoring")</span>
                     </span>
                 }
             </div>
@@ -42,11 +44,11 @@
                 <select @bind="_filterType" 
                         @bind:event="oninput"
                         class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-500">
-                    <option value="all">全部类型</option>
-                    <option value="Created">创建</option>
-                    <option value="Modified">修改</option>
-                    <option value="Deleted">删除</option>
-                    <option value="Renamed">重命名</option>
+                    <option value="all">@T("fileMonitor.filterAll")</option>
+                    <option value="Created">@T("fileMonitor.filterCreated")</option>
+                    <option value="Modified">@T("fileMonitor.filterModified")</option>
+                    <option value="Deleted">@T("fileMonitor.filterDeleted")</option>
+                    <option value="Renamed">@T("fileMonitor.filterRenamed")</option>
                 </select>
                 
                 <button @onclick="ClearHistory" 
@@ -54,7 +56,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
-                    清空
+                    @T("common.clear")
                 </button>
             </div>
         </div>
@@ -64,23 +66,23 @@
         {
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-3">
                 <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                    <div class="text-xs text-gray-500">总计</div>
+                    <div class="text-xs text-gray-500">@T("fileMonitor.statsTotal")</div>
                     <div class="text-lg font-bold text-gray-800">@_changes.Count</div>
                 </div>
                 <div class="bg-green-50 rounded-lg p-2 border border-green-200">
-                    <div class="text-xs text-green-600">创建</div>
+                    <div class="text-xs text-green-600">@T("fileMonitor.statsCreated")</div>
                     <div class="text-lg font-bold text-green-700">@_changes.Count(c => c.ChangeType == FileChangeType.Created)</div>
                 </div>
                 <div class="bg-blue-50 rounded-lg p-2 border border-blue-200">
-                    <div class="text-xs text-blue-600">修改</div>
+                    <div class="text-xs text-blue-600">@T("fileMonitor.statsModified")</div>
                     <div class="text-lg font-bold text-blue-700">@_changes.Count(c => c.ChangeType == FileChangeType.Modified)</div>
                 </div>
                 <div class="bg-red-50 rounded-lg p-2 border border-red-200">
-                    <div class="text-xs text-red-600">删除</div>
+                    <div class="text-xs text-red-600">@T("fileMonitor.statsDeleted")</div>
                     <div class="text-lg font-bold text-red-700">@_changes.Count(c => c.ChangeType == FileChangeType.Deleted)</div>
                 </div>
                 <div class="bg-yellow-50 rounded-lg p-2 border border-yellow-200">
-                    <div class="text-xs text-yellow-600">重命名</div>
+                    <div class="text-xs text-yellow-600">@T("fileMonitor.statsRenamed")</div>
                     <div class="text-lg font-bold text-yellow-700">@_changes.Count(c => c.ChangeType == FileChangeType.Renamed)</div>
                 </div>
             </div>
@@ -99,8 +101,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                 </div>
-                <p class="text-base font-semibold text-gray-600">暂无文件变更记录</p>
-                <p class="text-sm mt-2 text-gray-500">@(_isMonitoring ? "等待文件变更..." : "点击开始监控按钮启动实时监控")</p>
+                <p class="text-base font-semibold text-gray-600">@T("fileMonitor.noChangesTitle")</p>
+                <p class="text-sm mt-2 text-gray-500">@(_isMonitoring ? T("fileMonitor.noChangesMonitoring") : T("fileMonitor.noChangesNotMonitoring"))</p>
             </div>
         }
         else
@@ -125,7 +127,7 @@
                                     <span class="text-xs text-gray-500">@FormatTime(change.Timestamp)</span>
                                     @if (change.IsDirectory)
                                     {
-                                        <span class="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-0.5 rounded-full">📁 文件夹</span>
+                                        <span class="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-0.5 rounded-full">@T("fileMonitor.folderTag")</span>
                                     }
                                     else if (!string.IsNullOrEmpty(change.FileExtension))
                                     {
@@ -152,25 +154,25 @@
                                     @if (change.FileSize.HasValue)
                                     {
                                         <div class="text-xs text-gray-500">
-                                            <span class="font-semibold">大小:</span> @FormatFileSize(change.FileSize.Value)
+                                            <span class="font-semibold">@T("fileMonitor.size"):</span> @FormatFileSize(change.FileSize.Value)
                                         </div>
                                     }
                                     @if (change.LastModified.HasValue)
                                     {
                                         <div class="text-xs text-gray-500">
-                                            <span class="font-semibold">最后修改:</span> @change.LastModified.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                                            <span class="font-semibold">@T("fileMonitor.lastModified"):</span> @change.LastModified.Value.ToString("yyyy-MM-dd HH:mm:ss")
                                         </div>
                                     }
                                     @if (change.CreatedTime.HasValue && change.ChangeType == FileChangeType.Created)
                                     {
                                         <div class="text-xs text-gray-500">
-                                            <span class="font-semibold">创建时间:</span> @change.CreatedTime.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                                            <span class="font-semibold">@T("fileMonitor.createdTime"):</span> @change.CreatedTime.Value.ToString("yyyy-MM-dd HH:mm:ss")
                                         </div>
                                     }
                                     @if (!string.IsNullOrEmpty(change.ContentPreview))
                                     {
                                         <details class="mt-2">
-                                            <summary class="text-xs text-blue-600 cursor-pointer hover:text-blue-700 font-semibold">查看内容预览</summary>
+                                            <summary class="text-xs text-blue-600 cursor-pointer hover:text-blue-700 font-semibold">@T("fileMonitor.previewContent")</summary>
                                             <pre class="mt-1 text-[10px] bg-gray-50 p-2 rounded border border-gray-200 overflow-x-auto">@change.ContentPreview</pre>
                                         </details>
                                     }
@@ -193,8 +195,14 @@
     private string _filterType = "all";
     private System.Threading.Timer? _refreshTimer;
 
-    protected override void OnInitialized()
+    // 本地化相关
+    private Dictionary<string, string> _translations = new();
+    private string _currentLanguage = "zh-CN";
+
+    protected override async Task OnInitializedAsync()
     {
+        await LoadTranslationsAsync();
+
         // 订阅文件变更事件
         FileMonitorService.OnFileChanged += OnFileChanged;
         
@@ -358,11 +366,11 @@
     {
         return type switch
         {
-            FileChangeType.Created => "创建",
-            FileChangeType.Modified => "修改",
-            FileChangeType.Deleted => "删除",
-            FileChangeType.Renamed => "重命名",
-            _ => "未知"
+            FileChangeType.Created => T("fileMonitor.changeCreated"),
+            FileChangeType.Modified => T("fileMonitor.changeModified"),
+            FileChangeType.Deleted => T("fileMonitor.changeDeleted"),
+            FileChangeType.Renamed => T("fileMonitor.changeRenamed"),
+            _ => type.ToString()
         };
     }
 
@@ -379,6 +387,77 @@
         return new MarkupString(icon);
     }
 
+
+    #region 本地化辅助方法
+
+    private async Task LoadTranslationsAsync()
+    {
+        try
+        {
+            _currentLanguage = await L.GetCurrentLanguageAsync();
+            var allTranslations = await L.GetAllTranslationsAsync(_currentLanguage);
+            _translations = FlattenTranslations(allTranslations);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[文件监控] 加载翻译资源失败: {ex.Message}");
+        }
+    }
+
+    private Dictionary<string, string> FlattenTranslations(Dictionary<string, object> source, string prefix = "")
+    {
+        var result = new Dictionary<string, string>();
+
+        foreach (var kvp in source)
+        {
+            var key = string.IsNullOrEmpty(prefix) ? kvp.Key : $"{prefix}.{kvp.Key}";
+
+            if (kvp.Value is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Object)
+                {
+                    var nested = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonElement.GetRawText());
+                    if (nested != null)
+                    {
+                        foreach (var item in FlattenTranslations(nested, key))
+                        {
+                            result[item.Key] = item.Value;
+                        }
+                    }
+                }
+                else if (jsonElement.ValueKind == JsonValueKind.String)
+                {
+                    result[key] = jsonElement.GetString() ?? key;
+                }
+            }
+            else if (kvp.Value is Dictionary<string, object> dict)
+            {
+                foreach (var item in FlattenTranslations(dict, key))
+                {
+                    result[item.Key] = item.Value;
+                }
+            }
+            else if (kvp.Value is string str)
+            {
+                result[key] = str;
+            }
+        }
+
+        return result;
+    }
+
+    private string T(string key)
+    {
+        if (_translations.TryGetValue(key, out var translation))
+        {
+            return translation;
+        }
+
+        var parts = key.Split('.');
+        return parts.Length > 0 ? parts[^1] : key;
+    }
+
+    #endregion
     private string FormatTime(DateTime time)
     {
         var diff = DateTime.Now - time;

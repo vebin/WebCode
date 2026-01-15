@@ -6,12 +6,12 @@
 @using WebCodeCli.Components
 @inject IJSRuntime JSRuntime
 
-<PageTitle>编程助手</PageTitle>
+<PageTitle>@T("codeAssistant.title")</PageTitle>
 
 <!-- 移动端折叠/展开按钮 (固定在屏幕中间右侧) -->
 <button @onclick="TogglePreviewPanel"
         class="lg:hidden fixed top-1/2 right-2 -translate-y-1/2 z-50 w-10 h-10 bg-gray-800 hover:bg-black text-white rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center active:scale-95"
-        title="@(_isPreviewCollapsed ? "展开预览" : "折叠预览")">
+        title="@(_isPreviewCollapsed ? T("codeAssistant.expandPreview") : T("codeAssistant.collapsePreview"))">
     @if (_isPreviewCollapsed) 
     {
         <!-- 展开图标 (向上箭头) -->
@@ -39,9 +39,9 @@
                     <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    会话历史
+                    @T("codeAssistant.sessionHistory")
                 </h2>
-                <button @onclick="ToggleSessionList" class="p-2 hover:bg-gray-200 rounded-lg transition-colors" title="关闭">
+                <button @onclick="ToggleSessionList" class="p-2 hover:bg-gray-200 rounded-lg transition-colors" title="@T("common.close")">
                     <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -54,7 +54,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    新建会话
+                    @T("codeAssistant.newSession")
                 </button>
             </div>
             
@@ -65,7 +65,7 @@
                     <!-- 加载动画 -->
                     <div class="p-8 text-center">
                         <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-700 mb-4"></div>
-                        <p class="text-sm text-gray-500">加载会话列表...</p>
+                        <p class="text-sm text-gray-500">@T("common.loading")</p>
                     </div>
                 }
                 else if (_sessions.Any())
@@ -88,12 +88,12 @@
                                     }
                                     else
                                     {
-                                        <button @onclick:stopPropagation="true" @onclick="() => ShowRenameDialog(session)" class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="重命名">
+                                        <button @onclick:stopPropagation="true" @onclick="() => ShowRenameDialog(session)" class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="@T("codeAssistant.renameSession")">
                                             <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button @onclick:stopPropagation="true" @onclick="() => ShowDeleteDialog(session)" class="p-1.5 hover:bg-red-100 rounded-lg transition-colors" title="删除">
+                                        <button @onclick:stopPropagation="true" @onclick="() => ShowDeleteDialog(session)" class="p-1.5 hover:bg-red-100 rounded-lg transition-colors" title="@T("common.delete")">
                                             <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
@@ -112,8 +112,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
                             </svg>
                         </div>
-                        <p class="text-base font-semibold text-gray-600">暂无会话记录</p>
-                        <p class="text-sm mt-2 text-gray-500">点击上方按钮创建新会话</p>
+                        <p class="text-base font-semibold text-gray-600">@T("codeAssistant.noSessions")</p>
+                        <p class="text-sm mt-2 text-gray-500">@T("codeAssistant.createSessionHint")</p>
                     </div>
                 }
             </div>
@@ -127,9 +127,9 @@
                     <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    会话历史
+                    @T("codeAssistant.sessionHistory")
                 </h2>
-                <button @onclick="ToggleSessionList" class="p-2 hover:bg-gray-200 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" title="关闭">
+                <button @onclick="ToggleSessionList" class="p-2 hover:bg-gray-200 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" title="@T("common.close")">
                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -142,7 +142,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    新建会话
+                    @T("codeAssistant.newSession")
                 </button>
             </div>
             
@@ -153,7 +153,7 @@
                     <!-- 加载动画 -->
                     <div class="p-8 text-center">
                         <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-700 mb-4"></div>
-                        <p class="text-sm text-gray-500">加载会话列表...</p>
+                        <p class="text-sm text-gray-500">@T("common.loading")</p>
                     </div>
                 }
                 else if (_sessions.Any())
@@ -176,12 +176,12 @@
                                     }
                                     else
                                     {
-                                        <button @onclick:stopPropagation="true" @onclick="() => ShowRenameDialog(session)" class="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" title="重命名">
+                                        <button @onclick:stopPropagation="true" @onclick="() => ShowRenameDialog(session)" class="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" title="@T("codeAssistant.renameSession")">
                                             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
                                         </button>
-                                        <button @onclick:stopPropagation="true" @onclick="() => ShowDeleteDialog(session)" class="p-2 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" title="删除">
+                                        <button @onclick:stopPropagation="true" @onclick="() => ShowDeleteDialog(session)" class="p-2 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" title="@T("common.delete")">
                                             <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
@@ -200,8 +200,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
                             </svg>
                         </div>
-                        <p class="text-base font-semibold text-gray-600">暂无会话记录</p>
-                        <p class="text-sm mt-2 text-gray-500">点击上方按钮创建新会话</p>
+                        <p class="text-base font-semibold text-gray-600">@T("codeAssistant.noSessions")</p>
+                        <p class="text-sm mt-2 text-gray-500">@T("codeAssistant.createSessionHint")</p>
                     </div>
                 }
             </div>
@@ -219,8 +219,8 @@
                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <span class="hidden sm:inline">输出结果</span>
-                        <span class="sm:hidden">输出</span>
+                        <span class="hidden sm:inline">@T("codeAssistant.outputResult")</span>
+                        <span class="sm:hidden">@T("codeAssistant.outputResult")</span>
                     </div>
                 </button>
                 <button @onclick='() => _activeTabKey = "2"'
@@ -229,8 +229,8 @@
                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                         </svg>
-                        <span class="hidden sm:inline">工作区文件</span>
-                        <span class="sm:hidden">文件</span>
+                        <span class="hidden sm:inline">@T("codeAssistant.workspaceFiles")</span>
+                        <span class="sm:hidden">@T("codeAssistant.workspaceFiles")</span>
                     </div>
                 </button>
                 <button @onclick='() => _activeTabKey = "3"'
@@ -239,8 +239,8 @@
                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                         </svg>
-                        <span class="hidden sm:inline">HTML 预览</span>
-                        <span class="sm:hidden">预览</span>
+                        <span class="hidden sm:inline">@T("codeAssistant.htmlPreview")</span>
+                        <span class="sm:hidden">@T("codeAssistant.htmlPreview")</span>
                     </div>
                 </button>
             </nav>
@@ -505,21 +505,21 @@
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                                 </svg>
-                                <span>文件树</span>
+                                <span>@T("codeAssistant.fileTree")</span>
                             </button>
                             <button @onclick='() => _workspaceSubTab = "history"' 
                                     class="@GetWorkspaceSubTabClass("history") whitespace-nowrap py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span>版本历史</span>
+                                <span>@T("codeAssistant.versionHistory")</span>
                             </button>
                             <button @onclick='() => _workspaceSubTab = "diff"' 
                                     class="@GetWorkspaceSubTabClass("diff") whitespace-nowrap py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                                 </svg>
-                                <span>文件对比</span>
+                                <span>@T("codeAssistant.fileDiff")</span>
                             </button>
                             <button @onclick='() => _workspaceSubTab = "monitor"' 
                                     class="@GetWorkspaceSubTabClass("monitor") whitespace-nowrap py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5">
@@ -527,14 +527,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
-                                <span>实时监控</span>
+                                <span>@T("codeAssistant.fileMonitor")</span>
                             </button>
                             <button @onclick='() => _workspaceSubTab = "search"' 
                                     class="@GetWorkspaceSubTabClass("search") whitespace-nowrap py-2 px-2 sm:px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center gap-1 sm:gap-1.5">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
-                                <span>文件搜索</span>
+                                <span>@T("codeAssistant.fileSearch")</span>
                             </button>
                         </nav>
                     </div>
@@ -548,13 +548,13 @@
                             {
                                 <div class="h-full flex flex-col">
                                     <div class="p-3 sm:p-4 border-b border-gray-200 flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                                        <span class="font-bold text-sm sm:text-base flex-1 text-gray-800">工作区文件</span>
+                                        <span class="font-bold text-sm sm:text-base flex-1 text-gray-800">@T("codeAssistant.workspaceFiles")</span>
                                         <button @onclick="ShowCreateFolderDialog"
                                                 class="btn-default text-[10px] sm:text-xs py-1.5 px-2 sm:px-3 flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-all">
                                             <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                                             </svg>
-                                            <span class="hidden sm:inline">新建</span>
+                                            <span class="hidden sm:inline">@T("codeAssistant.createFolder")</span>
                                         </button>
                                         <label class="btn-primary text-[10px] sm:text-xs py-1.5 px-2 sm:px-3 flex items-center gap-1 sm:gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:shadow-lg transition-all">
                                             @if (_isUploading)
@@ -567,7 +567,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                                 </svg>
                                             }
-                                            上传
+                                            @T("common.upload")
                                             <InputFile OnChange="HandleFileUpload" 
                                                        disabled="@_isUploading"
                                                        class="hidden" />
@@ -579,8 +579,8 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-sm sm:text-base font-semibold text-gray-600">暂无文件</p>
-                                        <p class="text-xs sm:text-sm mt-1.5 sm:mt-2 text-gray-500">点击上方按钮上传文件到工作区</p>
+                                        <p class="text-sm sm:text-base font-semibold text-gray-600">@T("codeAssistant.noWorkspace")</p>
+                                        <p class="text-xs sm:text-sm mt-1.5 sm:mt-2 text-gray-500">@T("codeAssistant.startConversation")</p>
                                     </div>
                                 </div>
                             }
@@ -590,13 +590,13 @@
                                     <div class="p-3 sm:p-4 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0">
                                         <!-- 第一行：主要操作 -->
                                         <div class="flex items-center gap-2 sm:gap-3">
-                                            <span class="font-bold text-sm sm:text-base flex-1 text-gray-800">工作区文件</span>
+                                            <span class="font-bold text-sm sm:text-base flex-1 text-gray-800">@T("codeAssistant.workspaceFiles")</span>
                                             <button @onclick="ShowCreateFolderDialog"
                                                     class="btn-default text-[10px] sm:text-xs py-1.5 px-2 sm:px-3 flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-all">
                                                 <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                                                 </svg>
-                                                <span class="hidden sm:inline">新建</span>
+                                                <span class="hidden sm:inline">@T("codeAssistant.createFolder")</span>
                                             </button>
                                             <label class="btn-default text-[10px] sm:text-xs py-1.5 px-2 sm:px-3 flex items-center gap-1 sm:gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm hover:shadow-md transition-all">
                                                 @if (_isUploading)
@@ -609,7 +609,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                                     </svg>
                                                 }
-                                                上传
+                                                @T("common.upload")
                                                 <InputFile OnChange="HandleFileUpload" 
                                                            disabled="@_isUploading"
                                                            class="hidden" />
@@ -642,18 +642,18 @@
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                                     </svg>
-                                                    复制
+                                                    @T("common.copy")
                                                 </button>
                                                 <button @onclick='() => ShowBatchOperationDialog("delete")'
                                                         class="btn-default text-[10px] py-1 px-2 flex items-center gap-1 text-red-600 hover:bg-red-50">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                     </svg>
-                                                    删除
+                                                    @T("common.delete")
                                                 </button>
                                                 <button @onclick="() => _selectedFiles.Clear()"
                                                         class="btn-default text-[10px] py-1 px-2">
-                                                    取消
+                                                    @T("common.cancel")
                                                 </button>
                                             </div>
                                         }
@@ -665,7 +665,7 @@
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                                     </svg>
-                                                    全选
+                                                    @T("common.selectAll")
                                                 </button>
                                             </div>
                                         }
@@ -724,7 +724,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                                 </svg>
                             </div>
-                            <p class="text-sm sm:text-base font-semibold text-gray-600 text-center px-4 sm:px-8">请从工作区文件中选择一个 HTML 文件进行预览</p>
+                            <p class="text-sm sm:text-base font-semibold text-gray-600 text-center px-4 sm:px-8">@T("codeAssistant.selectHtmlFromWorkspaceHint")</p>
                         </div>
                     }
                     else
@@ -818,14 +818,14 @@
                                         <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                         </svg>
-                                        打开
+                                        @T("codeAssistant.openInNewTab")
                                     </button>
                                     <button @onclick="RefreshHtmlPreview"
                                             class="btn-default text-[10px] sm:text-xs py-1.5 px-2 sm:px-3 flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-all flex-1 sm:flex-initial justify-center">
                                         <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                         </svg>
-                                        刷新
+                                        @T("common.refresh")
                                     </button>
                                 </div>
                             </div>
@@ -849,19 +849,7 @@
         <!-- 用户信息栏 -->
         @if (_showUserInfo)
         {
-            <div class="mb-2 sm:mb-3 lg:mb-4 pb-2 sm:pb-3 lg:pb-4 border-b border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-shrink-0 bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-sm">
-                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-full flex items-center justify-center shadow-md">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="text-[10px] sm:text-xs text-gray-500 font-medium">当前用户</div>
-                        <div class="text-xs sm:text-sm font-semibold text-gray-800">@_currentUsername</div>
-                    </div>
-                </div>
-                
+            <div class="mb-2 sm:mb-3 lg:mb-4 pb-2 sm:pb-3 lg:pb-4 border-b border-gray-200 flex items-center gap-2 sm:gap-3 flex-shrink-0 bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-sm">
                  <!-- CLI 工具选择 -->
                  <div class="flex-1 relative min-w-0">
                      <select @bind="_selectedToolId" 
@@ -879,34 +867,75 @@
                      </div>
                  </div>
                 
-                <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                    <a href="https://github.com/xuzeyu91/WebCode" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       class="btn-default text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-shadow px-2 sm:px-3 py-1.5 sm:py-2"
-                       title="访问 GitHub 仓库">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+                <!-- GitHub 链接 -->
+                <a href="https://github.com/xuzeyu91/WebCode" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="btn-default text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-shadow px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0"
+                   title="@T("codeAssistant.visitGitHub")">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="hidden sm:inline">GitHub</span>
+                </a>
+                
+                <!-- 用户头像下拉菜单 -->
+                <div class="relative flex-shrink-0">
+                    <button @onclick="ToggleUserDropdown" 
+                            @onclick:stopPropagation="true"
+                            class="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-all cursor-pointer"
+                            title="@_currentUsername">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-full flex items-center justify-center shadow-md">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 transition-transform @(_showUserDropdown ? "rotate-180" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
-                        <span class="hidden sm:inline">GitHub</span>
-                    </a>
-                    <button @onclick="OpenEnvConfig" 
-                            class="btn-default text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-shadow px-2 sm:px-3 py-1.5 sm:py-2"
-                            title="配置环境变量">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <span class="hidden sm:inline">设置</span>
                     </button>
-                    <button @onclick="HandleLogout" 
-                            class="btn-default text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-shadow px-2 sm:px-3 py-1.5 sm:py-2"
-                            title="退出登录">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
-                        <span class="hidden sm:inline">退出</span>
-                    </button>
+                    
+                    @if (_showUserDropdown)
+                    {
+                        <!-- 下拉菜单遮罩 -->
+                        <div class="fixed inset-0 z-40" @onclick="CloseUserDropdown"></div>
+                        
+                        <!-- 下拉菜单内容 -->
+                        <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50 transform transition-all">
+                            <!-- 用户信息 -->
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="text-[10px] sm:text-xs text-gray-500 font-medium">@T("codeAssistant.currentUser")</div>
+                                <div class="text-sm font-semibold text-gray-800 truncate">@_currentUsername</div>
+                            </div>
+                            
+                            <!-- 语言切换 -->
+                            <div class="px-2 py-2 border-b border-gray-100">
+                                <div class="px-2 py-1 text-[10px] sm:text-xs text-gray-500 font-medium">@T("codeAssistant.language")</div>
+                                <div class="px-2">
+                                    <LanguageSwitcher OnLanguageChanged="OnLanguageChangedFromDropdown" />
+                                </div>
+                            </div>
+                            
+                            <!-- 设置 -->
+                            <button @onclick="OpenEnvConfigFromDropdown" 
+                                    class="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-700">@T("codeAssistant.settings")</span>
+                            </button>
+                            
+                            <!-- 退出 -->
+                            <button @onclick="HandleLogoutFromDropdown" 
+                                    class="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-red-50 transition-colors text-left">
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                <span class="text-sm text-red-600">@T("codeAssistant.logout")</span>
+                            </button>
+                        </div>
+                    }
                 </div>
             </div>
         }
@@ -915,26 +944,26 @@
             <TemplateLibraryModal @ref="_templateLibraryModal" OnTemplateSelected="OnTemplateSelected" />
             <button @onclick="ToggleSessionList" 
                     class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]"
-                    title="会话历史">
+                    title="@T("codeAssistant.sessionHistory")">
                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span class="hidden sm:inline">会话历史</span>
+                <span class="hidden sm:inline">@T("codeAssistant.sessionHistory")</span>
             </button>
             <button @onclick="ToggleContextPanel" 
                     class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]"
-                    title="上下文管理">
+                    title="@T("codeAssistant.contextManagement")">
                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                <span class="hidden sm:inline">上下文</span>
+                <span class="hidden sm:inline">@T("codeAssistant.contextManagement")</span>
             </button>
             <button @onclick="ClearChat" 
                     class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]">
                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
-                <span class="hidden sm:inline">清空</span>
+                <span class="hidden sm:inline">@T("codeAssistant.clearChat")</span>
             </button>
         </div>
 
@@ -1023,18 +1052,18 @@
         <div class="border-t-2 border-gray-200 pt-3 sm:pt-4 lg:pt-5 flex-shrink-0 bg-white/50 backdrop-blur-sm rounded-t-lg sm:rounded-t-xl -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 -mb-3 sm:-mb-4 lg:-mb-6 pb-3 sm:pb-4 lg:pb-6">
             <!-- 文件上传区域 -->
             <div class="mb-3 flex flex-col gap-2">
-                <label class="text-[10px] sm:text-xs text-gray-600 font-medium px-1">上传文件</label>
+                <label class="text-[10px] sm:text-xs text-gray-600 font-medium px-1">@T("codeAssistant.uploadFile")</label>
                 <div class="flex items-center gap-2">
                     <select @bind="_selectedUploadFolder"
                             class="flex-1 px-2 sm:px-3 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs sm:text-sm bg-white shadow-sm hover:border-gray-300 transition-all h-10 sm:h-11">
-                        <option value="">根目录</option>
+                        <option value="">@T("codeAssistant.rootFolder")</option>
                         @foreach (var folder in _availableFolders)
                         {
                             <option value="@folder">@folder</option>
                         }
                     </select>
                     <label class="btn-default flex items-center gap-1 sm:gap-1.5 h-10 sm:h-11 px-3 sm:px-4 py-2 sm:py-2.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm hover:shadow-md transition-all flex-shrink-0"
-                           title="上传文件到工作区">
+                           title="@T("codeAssistant.uploadToWorkspace")">
                         @if (_isUploading)
                         {
                             <div class="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-gray-600 rounded-full border-t-transparent"></div>
@@ -1045,7 +1074,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                             </svg>
                         }
-                        <span class="hidden sm:inline">选择文件</span>
+                        <span class="hidden sm:inline">@T("codeAssistant.selectFile")</span>
                         <InputFile OnChange="HandleFileUpload" 
                                    disabled="@_isUploading"
                                    class="hidden" />
@@ -1062,7 +1091,7 @@
                               @onkeydown="HandleKeyDown"
                               @onkeydown:preventDefault="@(_isKeyDownEnterWithoutShift)"
                               id="input-message"
-                              placeholder="输入您的编程问题或需求..."
+                              placeholder="@T("codeAssistant.inputPlaceholder")"
                               rows="3"
                               maxlength="5000"
                               disabled="@_isLoading"
@@ -1080,12 +1109,12 @@
                                      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                                      </svg>
-                                     <span class="text-sm font-semibold text-gray-800">选择技能</span>
+                                     <span class="text-sm font-semibold text-gray-800">@T("codeAssistant.selectSkill")</span>
                                      <span class="text-xs px-2 py-0.5 rounded-full @GetCurrentToolBadgeClass()">@GetCurrentToolName()</span>
                                      <span class="text-xs text-gray-500 ml-auto">@GetFilteredSkills().Count / @_skills.Count</span>
                                      @if (!string.IsNullOrEmpty(_skillFilter))
                                      {
-                                         <span class="text-xs text-blue-600 font-medium">筛选: @_skillFilter</span>
+                                         <span class="text-xs text-blue-600 font-medium">@T("codeAssistant.filter"): @_skillFilter</span>
                                      }
                                  </div>
                              </div>
@@ -1120,7 +1149,7 @@
                                         <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
-                                        <p>没有找到匹配的技能</p>
+                                        <p>@T("codeAssistant.noMatchingSkills")</p>
                                     </div>
                                 }
                             </div>
@@ -1142,7 +1171,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                             </svg>
                         }
-                        发送
+                        @T("codeAssistant.send")
                     </button>
                 </div>
             </div>
@@ -1172,7 +1201,7 @@
                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                     </svg>
-                    新建文件夹
+                    @T("codeAssistant.createFolder")
                 </h3>
                 <button @onclick="CloseCreateFolderDialog" 
                         class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -1195,23 +1224,23 @@
             }
 
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">文件夹名称</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">@T("codeAssistant.folderName")</label>
                 <input @bind="_newFolderName"
                        @bind:event="oninput"
                        @onkeydown="HandleCreateFolderKeyDown"
                        type="text"
-                       placeholder="例如: src, images, documents"
+                       placeholder="@T("codeAssistant.folderNamePlaceholder")"
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-sm bg-white shadow-sm"
                        autofocus />
                 <p class="mt-2 text-xs text-gray-500">
-                    支持多级目录，使用 / 分隔，例如: src/components
+                    @T("codeAssistant.folderNameHint")
                 </p>
             </div>
 
             <div class="flex gap-3">
                 <button @onclick="CloseCreateFolderDialog"
                         class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors shadow-sm">
-                    取消
+                    @T("common.cancel")
                 </button>
                 <button @onclick="CreateFolder"
                         disabled="@(string.IsNullOrWhiteSpace(_newFolderName) || _isCreatingFolder)"
@@ -1219,11 +1248,11 @@
                     @if (_isCreatingFolder)
                     {
                         <div class="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
-                        <span>创建中...</span>
+                        <span>@T("codeAssistant.creating")</span>
                     }
                     else
                     {
-                        <span>创建</span>
+                        <span>@T("codeAssistant.create")</span>
                     }
                 </button>
             </div>
@@ -1241,7 +1270,7 @@
                     <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                     </svg>
-                    确认删除
+                    @T("codeAssistant.confirmDelete")
                 </h3>
                 <button @onclick="CloseDeleteConfirmDialog" 
                         class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -1265,7 +1294,7 @@
 
             <div class="mb-6">
                 <p class="text-gray-700 text-sm mb-4">
-                    您确定要删除以下@(_nodeToDelete.Type == "folder" ? "文件夹" : "文件")吗？
+                    @T("codeAssistant.deleteWarning", ("type", _nodeToDelete.Type == "folder" ? T("codeAssistant.folder") : T("codeAssistant.file")))
                 </p>
                 <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
                     <div class="flex items-center gap-2">
@@ -1287,13 +1316,13 @@
                 @if (_nodeToDelete.Type == "folder")
                 {
                     <p class="mt-3 text-xs text-red-600 font-medium">
-                        ⚠️ 警告：此操作将删除文件夹及其所有内容，且无法恢复！
+                        ⚠️ @T("codeAssistant.folderDeleteWarning")
                     </p>
                 }
                 else
                 {
                     <p class="mt-3 text-xs text-gray-500">
-                        此操作无法恢复，请谨慎操作。
+                        @T("codeAssistant.cannotUndo")
                     </p>
                 }
             </div>
@@ -1301,7 +1330,7 @@
             <div class="flex gap-3">
                 <button @onclick="CloseDeleteConfirmDialog"
                         class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors shadow-sm">
-                    取消
+                    @T("common.cancel")
                 </button>
                 <button @onclick="DeleteWorkspaceItem"
                         disabled="@_isDeleting"
@@ -1309,11 +1338,11 @@
                     @if (_isDeleting)
                     {
                         <div class="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
-                        <span>删除中...</span>
+                        <span>@T("codeAssistant.deleting")</span>
                     }
                     else
                     {
-                        <span>确认删除</span>
+                        <span>@T("codeAssistant.confirmDelete")</span>
                     }
                 </button>
             </div>
@@ -1356,7 +1385,7 @@
                         <button @onclick="() => ShowDeleteConfirmDialog(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors"
-                                title="删除文件夹">
+                                title="@T("codeAssistant.deleteFolder")">
                             <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -1366,7 +1395,7 @@
                         <button @onclick="() => ShowDeleteConfirmDialog(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
-                                title="删除文件夹">
+                                title="@T("codeAssistant.deleteFolder")">
                             <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -1400,7 +1429,7 @@
                         <button @onclick="async () => await PreviewFile(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
-                                title="预览代码">
+                                title="@T("codeAssistant.previewCode")">
                             <svg class="w-3.5 h-3.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -1409,7 +1438,7 @@
                         <button @onclick="() => DownloadFile(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
-                                title="下载文件">
+                                title="@T("codeAssistant.downloadFile")">
                             <svg class="w-3.5 h-3.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                             </svg>
@@ -1417,7 +1446,7 @@
                         <button @onclick="() => ShowDeleteConfirmDialog(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors"
-                                title="删除文件">
+                                title="@T("codeAssistant.deleteFile")">
                             <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -1427,7 +1456,7 @@
                         <button @onclick="async () => await PreviewFile(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                                title="预览代码">
+                                title="@T("codeAssistant.previewCode")">
                             <svg class="w-3.5 h-3.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -1436,7 +1465,7 @@
                         <button @onclick="() => DownloadFile(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                                title="下载文件">
+                                title="@T("codeAssistant.downloadFile")">
                             <svg class="w-3.5 h-3.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                             </svg>
@@ -1444,7 +1473,7 @@
                         <button @onclick="() => ShowDeleteConfirmDialog(node)"
                                 @onclick:stopPropagation="true"
                                 class="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
-                                title="删除文件">
+                                title="@T("codeAssistant.deleteFile")">
                             <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>

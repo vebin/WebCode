@@ -168,6 +168,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     // 用户信息
     private bool _showUserInfo = false;
     private string _currentUsername = string.Empty;
+    private bool _showUserDropdown = false; // 用户头像下拉菜单
     
     // 键盘事件状态
     private bool _isKeyDownEnterWithoutShift = false;
@@ -2878,6 +2879,37 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         {
             Console.WriteLine($"退出登录失败: {ex.Message}");
         }
+    }
+    
+    // 用户头像下拉菜单控制方法
+    private void ToggleUserDropdown()
+    {
+        _showUserDropdown = !_showUserDropdown;
+        StateHasChanged();
+    }
+    
+    private void CloseUserDropdown()
+    {
+        _showUserDropdown = false;
+        StateHasChanged();
+    }
+    
+    private void OpenEnvConfigFromDropdown()
+    {
+        _showUserDropdown = false;
+        OpenEnvConfig();
+    }
+    
+    private async Task HandleLogoutFromDropdown()
+    {
+        _showUserDropdown = false;
+        await HandleLogout();
+    }
+    
+    private void OnLanguageChangedFromDropdown(string languageCode)
+    {
+        _showUserDropdown = false;
+        OnLanguageChanged(languageCode);
     }
 
     private void TogglePreviewPanel()

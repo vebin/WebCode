@@ -191,6 +191,68 @@
     "stageExecute": "실행 중",
     "stageComplete": "완료"
   },
+  "cliEvent": {
+    "title": {
+      "threadStarted": "스레드 시작",
+      "turnStarted": "새 턴 시작",
+      "turnCompleted": "턴 완료",
+      "turnFailed": "턴 실패",
+      "itemAction": "{item} {action}",
+      "todoListUpdate": "할 일 목록 업데이트",
+      "error": "오류",
+      "init": "세션 초기화",
+      "message": "메시지",
+      "toolUse": "도구 호출",
+      "toolResult": "도구 결과",
+      "result": "실행 완료",
+      "system": "시스템 메시지",
+      "user": "사용자 입력",
+      "raw": "출력",
+      "event": "이벤트 ({type})"
+    },
+    "badge": {
+      "unknown": "미인식",
+      "todo": "할 일",
+      "reasoning": "추론",
+      "reply": "응답",
+      "thread": "스레드",
+      "turnStart": "턴 시작",
+      "turnEnd": "턴 종료",
+      "turnFailed": "턴 실패",
+      "itemStart": "항목 시작",
+      "itemUpdate": "항목 업데이트",
+      "error": "오류",
+      "init": "초기화",
+      "toolUse": "도구 호출",
+      "toolResult": "도구 결과",
+      "result": "완료",
+      "system": "시스템",
+      "input": "입력",
+      "output": "출력",
+      "event": "이벤트"
+    },
+    "action": {
+      "start": "시작",
+      "update": "업데이트",
+      "complete": "완료"
+    },
+    "itemType": {
+      "commandExecution": "명령 실행",
+      "agentMessage": "어시스턴트 메시지",
+      "reasoning": "추론 과정",
+      "mcpToolCall": "MCP 도구 호출",
+      "webSearch": "웹 검색",
+      "todoList": "할 일 목록",
+      "fileChange": "파일 변경",
+      "toolCall": "도구 호출",
+      "unknown": "알 수 없는 유형"
+    },
+    "group": {
+      "commandExecution": "명령 실행",
+      "toolCall": "도구 호출",
+      "withName": "{group} - {name}"
+    }
+  },
   "fileSearch": {
     "debugLabel": "디버그",
     "searchPlaceholder": "검색어를 입력하세요...",

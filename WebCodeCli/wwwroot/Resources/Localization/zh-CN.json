@@ -191,6 +191,68 @@
     "stageExecute": "执行中",
     "stageComplete": "完成"
   },
+  "cliEvent": {
+    "title": {
+      "threadStarted": "会话已启动",
+      "turnStarted": "开始新一轮交互",
+      "turnCompleted": "交互已完成",
+      "turnFailed": "交互失败",
+      "itemAction": "{item}{action}",
+      "todoListUpdate": "待办列表更新",
+      "error": "错误",
+      "init": "会话初始化",
+      "message": "消息",
+      "toolUse": "工具调用",
+      "toolResult": "工具结果",
+      "result": "执行完成",
+      "system": "系统消息",
+      "user": "用户输入",
+      "raw": "输出",
+      "event": "事件 ({type})"
+    },
+    "badge": {
+      "unknown": "未识别",
+      "todo": "待办",
+      "reasoning": "推理",
+      "reply": "回复",
+      "thread": "线程",
+      "turnStart": "交互开始",
+      "turnEnd": "交互结束",
+      "turnFailed": "交互失败",
+      "itemStart": "节点开始",
+      "itemUpdate": "节点更新",
+      "error": "错误",
+      "init": "初始化",
+      "toolUse": "工具调用",
+      "toolResult": "工具结果",
+      "result": "完成",
+      "system": "系统",
+      "input": "输入",
+      "output": "输出",
+      "event": "事件"
+    },
+    "action": {
+      "start": "开始",
+      "update": "更新",
+      "complete": "完成"
+    },
+    "itemType": {
+      "commandExecution": "命令执行",
+      "agentMessage": "助手消息",
+      "reasoning": "推理过程",
+      "mcpToolCall": "MCP 工具调用",
+      "webSearch": "网络搜索",
+      "todoList": "待办列表",
+      "fileChange": "文件变更",
+      "toolCall": "工具调用",
+      "unknown": "未知类型"
+    },
+    "group": {
+      "commandExecution": "命令执行",
+      "toolCall": "工具调用",
+      "withName": "{group} - {name}"
+    }
+  },
   "fileSearch": {
     "debugLabel": "调试",
     "searchPlaceholder": "输入搜索内容...",

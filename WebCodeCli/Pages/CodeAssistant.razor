@@ -311,7 +311,7 @@
                                             <div class="flex items-center justify-between gap-3">
                                                 <div class="flex items-center gap-2">
                                                     <span class="@($"text-xs font-semibold px-2 py-0.5 rounded-full {badgeClass}")">@badgeLabel</span>
-                                                    <span class="text-sm font-semibold text-gray-800">@evt.Title</span>
+                                                    <span class="text-sm font-semibold text-gray-800">@GetEventDisplayTitle(evt)</span>
                                                 </div>
                                                 <span class="text-xs text-gray-400">@evt.Type</span>
                                             </div>
@@ -436,7 +436,7 @@
                                                             <div class="flex items-center justify-between gap-3">
                                                                 <div class="flex items-center gap-2 min-w-0">
                                                                     <span class="@($"text-xs font-semibold px-2 py-0.5 rounded-full {badgeClass}")">@badgeLabel</span>
-                                                                    <span class="text-sm font-semibold text-gray-800 truncate">@evt.Title</span>
+                                                                    <span class="text-sm font-semibold text-gray-800 truncate">@GetEventDisplayTitle(evt)</span>
                                                                 </div>
                                                                 <span class="text-xs text-gray-400 flex-shrink-0">@evt.Type</span>
                                                             </div>

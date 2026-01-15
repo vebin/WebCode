@@ -1467,48 +1467,107 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         };
     }
 
-    private static string GetEventBadgeLabel(JsonlDisplayItem item)
+    private string GetEventBadgeLabel(JsonlDisplayItem item)
     {
         if (item.IsUnknown)
         {
-            return "未识别";
+            return T("cliEvent.badge.unknown");
         }
 
         if (item.ItemType == "todo_list")
         {
-            return "待办";
+            return T("cliEvent.badge.todo");
         }
 
         if (item.ItemType == "reasoning")
         {
-            return "推理";
+            return T("cliEvent.badge.reasoning");
         }
 
         if (item.ItemType == "agent_message")
         {
-            return "回复";
+            return T("cliEvent.badge.reply");
         }
 
         return item.Type switch
         {
             // Codex事件类型
-            "thread.started" => "线程",
-            "turn.started" => "交互开始",
-            "turn.completed" => "交互结束",
-            "turn.failed" => "交互失败",
-            "item.started" => "节点开始",
-            "item.updated" => "节点更新",
-            "error" => "错误",
+            "thread.started" => T("cliEvent.badge.thread"),
+            "turn.started" => T("cliEvent.badge.turnStart"),
+            "turn.completed" => T("cliEvent.badge.turnEnd"),
+            "turn.failed" => T("cliEvent.badge.turnFailed"),
+            "item.started" => T("cliEvent.badge.itemStart"),
+            "item.updated" => T("cliEvent.badge.itemUpdate"),
+            "error" => T("cliEvent.badge.error"),
             // Claude Code事件类型
-            "init" => "初始化",
-            "message" or "assistant" or "assistant:message" => "回复",
-            "tool_use" => "工具调用",
-            "tool_result" => "工具结果",
-            "result" => "完成",
-            "system" => "系统",
-            "user" => "输入",
-            "raw" => "输出",
-            _ => "事件"
+            "init" => T("cliEvent.badge.init"),
+            "message" or "assistant" or "assistant:message" => T("cliEvent.badge.reply"),
+            "tool_use" => T("cliEvent.badge.toolUse"),
+            "tool_result" => T("cliEvent.badge.toolResult"),
+            "result" => T("cliEvent.badge.result"),
+            "system" => T("cliEvent.badge.system"),
+            "user" => T("cliEvent.badge.input"),
+            "raw" => T("cliEvent.badge.output"),
+            _ => T("cliEvent.badge.event")
+        };
+    }
+
+    private string GetEventDisplayTitle(JsonlDisplayItem item)
+    {
+        if (item.ItemType == "todo_list" && item.Type == "tool_use")
+        {
+            return T("cliEvent.title.todoListUpdate");
+        }
+
+        var actionKey = item.Type switch
+        {
+            "item.started" => "cliEvent.action.start",
+            "item.updated" => "cliEvent.action.update",
+            "item.completed" => "cliEvent.action.complete",
+            _ => string.Empty
+        };
+
+        if (!string.IsNullOrWhiteSpace(actionKey))
+        {
+            return T("cliEvent.title.itemAction",
+                ("item", GetItemTypeLabel(item.ItemType)),
+                ("action", T(actionKey)));
+        }
+
+        return item.Type switch
+        {
+            // Codex 事件类型
+            "thread.started" => T("cliEvent.title.threadStarted"),
+            "turn.started" => T("cliEvent.title.turnStarted"),
+            "turn.completed" => T("cliEvent.title.turnCompleted"),
+            "turn.failed" => T("cliEvent.title.turnFailed"),
+            "error" => T("cliEvent.title.error"),
+            // Claude Code 事件类型
+            "init" => T("cliEvent.title.init"),
+            "message" or "assistant" or "assistant:message" => T("cliEvent.title.message"),
+            "tool_use" => T("cliEvent.title.toolUse"),
+            "tool_result" => T("cliEvent.title.toolResult"),
+            "result" => T("cliEvent.title.result"),
+            "system" => T("cliEvent.title.system"),
+            "user" => T("cliEvent.title.user"),
+            "raw" => T("cliEvent.title.raw"),
+            _ => string.IsNullOrWhiteSpace(item.Title) ? T("cliEvent.title.event", ("type", item.Type)) : item.Title
+        };
+    }
+
+    private string GetItemTypeLabel(string? itemType)
+    {
+        return itemType switch
+        {
+            "command_execution" => T("cliEvent.itemType.commandExecution"),
+            "agent_message" => T("cliEvent.itemType.agentMessage"),
+            "reasoning" => T("cliEvent.itemType.reasoning"),
+            "mcp_tool_call" => T("cliEvent.itemType.mcpToolCall"),
+            "web_search" => T("cliEvent.itemType.webSearch"),
+            "todo_list" => T("cliEvent.itemType.todoList"),
+            "file_change" => T("cliEvent.itemType.fileChange"),
+            "tool_call" => T("cliEvent.itemType.toolCall"),
+            _ => string.IsNullOrWhiteSpace(itemType) ? T("cliEvent.itemType.unknown") : itemType
         };
     }
 
@@ -3290,7 +3349,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         _displayedEventCount = InitialDisplayCount;
     }
 
-    private static string BuildGroupTitle(JsonlEventGroup group)
+    private string BuildGroupTitle(JsonlEventGroup group)
     {
         if (group.Kind == "command_execution")
         {
@@ -3298,11 +3357,17 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
             var cmd = ExtractLineValue(group.Items, "命令:");
             if (!string.IsNullOrWhiteSpace(cmd))
             {
-                return $"命令执行 - {cmd}";
+                return T("cliEvent.group.withName",
+                    ("group", T("cliEvent.group.commandExecution")),
+                    ("name", cmd));
             }
 
             var first = ExtractFirstLine(group.Items.FirstOrDefault()?.Content);
-            return string.IsNullOrWhiteSpace(first) ? "命令执行" : $"命令执行 - {first}";
+            return string.IsNullOrWhiteSpace(first)
+                ? T("cliEvent.group.commandExecution")
+                : T("cliEvent.group.withName",
+                    ("group", T("cliEvent.group.commandExecution")),
+                    ("name", first));
         }
 
         if (group.Kind == "tool_call")
@@ -3311,14 +3376,22 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
             var tool = ExtractLineValue(group.Items, "工具:");
             if (!string.IsNullOrWhiteSpace(tool))
             {
-                return $"工具调用 - {tool}";
+                return T("cliEvent.group.withName",
+                    ("group", T("cliEvent.group.toolCall")),
+                    ("name", tool));
             }
 
             var first = ExtractFirstLine(group.Items.FirstOrDefault()?.Content);
-            return string.IsNullOrWhiteSpace(first) ? "工具调用" : $"工具调用 - {first}";
+            return string.IsNullOrWhiteSpace(first)
+                ? T("cliEvent.group.toolCall")
+                : T("cliEvent.group.withName",
+                    ("group", T("cliEvent.group.toolCall")),
+                    ("name", first));
         }
 
-        return group.Items.FirstOrDefault()?.Title ?? "事件";
+        return group.Items.FirstOrDefault() is { } firstItem
+            ? GetEventDisplayTitle(firstItem)
+            : T("cliEvent.badge.event");
     }
 
     // 会话历史管理方法

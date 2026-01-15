@@ -112,6 +112,68 @@
     "stageExecute": "実行中",
     "stageComplete": "完了"
   },
+  "cliEvent": {
+    "title": {
+      "threadStarted": "スレッド開始",
+      "turnStarted": "新しいターン開始",
+      "turnCompleted": "ターン完了",
+      "turnFailed": "ターン失敗",
+      "itemAction": "{item}{action}",
+      "todoListUpdate": "TODOリスト更新",
+      "error": "エラー",
+      "init": "セッション初期化",
+      "message": "メッセージ",
+      "toolUse": "ツール呼び出し",
+      "toolResult": "ツール結果",
+      "result": "実行完了",
+      "system": "システムメッセージ",
+      "user": "ユーザー入力",
+      "raw": "出力",
+      "event": "イベント（{type}）"
+    },
+    "badge": {
+      "unknown": "未識別",
+      "todo": "TODO",
+      "reasoning": "推論",
+      "reply": "返信",
+      "thread": "スレッド",
+      "turnStart": "ターン開始",
+      "turnEnd": "ターン終了",
+      "turnFailed": "ターン失敗",
+      "itemStart": "項目開始",
+      "itemUpdate": "項目更新",
+      "error": "エラー",
+      "init": "初期化",
+      "toolUse": "ツール呼び出し",
+      "toolResult": "ツール結果",
+      "result": "完了",
+      "system": "システム",
+      "input": "入力",
+      "output": "出力",
+      "event": "イベント"
+    },
+    "action": {
+      "start": "開始",
+      "update": "更新",
+      "complete": "完了"
+    },
+    "itemType": {
+      "commandExecution": "コマンド実行",
+      "agentMessage": "アシスタントメッセージ",
+      "reasoning": "推論プロセス",
+      "mcpToolCall": "MCP ツール呼び出し",
+      "webSearch": "Web検索",
+      "todoList": "TODOリスト",
+      "fileChange": "ファイル変更",
+      "toolCall": "ツール呼び出し",
+      "unknown": "不明な種類"
+    },
+    "group": {
+      "commandExecution": "コマンド実行",
+      "toolCall": "ツール呼び出し",
+      "withName": "{group} - {name}"
+    }
+  },
   "codeAssistant": {
     "title": "プログラミングアシスタント",
     "inputPlaceholder": "プログラミングの質問または要件を入力...",

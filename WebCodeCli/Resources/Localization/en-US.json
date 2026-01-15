@@ -106,6 +106,68 @@
     "stageExecute": "Executing",
     "stageComplete": "Completed"
   },
+  "cliEvent": {
+    "title": {
+      "threadStarted": "Session started",
+      "turnStarted": "New turn started",
+      "turnCompleted": "Turn completed",
+      "turnFailed": "Turn failed",
+      "itemAction": "{item} {action}",
+      "todoListUpdate": "Todo list updated",
+      "error": "Error",
+      "init": "Session initialized",
+      "message": "Message",
+      "toolUse": "Tool call",
+      "toolResult": "Tool result",
+      "result": "Execution completed",
+      "system": "System message",
+      "user": "User input",
+      "raw": "Output",
+      "event": "Event ({type})"
+    },
+    "badge": {
+      "unknown": "Unknown",
+      "todo": "Todo",
+      "reasoning": "Reasoning",
+      "reply": "Reply",
+      "thread": "Thread",
+      "turnStart": "Turn start",
+      "turnEnd": "Turn end",
+      "turnFailed": "Turn failed",
+      "itemStart": "Item start",
+      "itemUpdate": "Item update",
+      "error": "Error",
+      "init": "Init",
+      "toolUse": "Tool call",
+      "toolResult": "Tool result",
+      "result": "Done",
+      "system": "System",
+      "input": "Input",
+      "output": "Output",
+      "event": "Event"
+    },
+    "action": {
+      "start": "Started",
+      "update": "Updated",
+      "complete": "Completed"
+    },
+    "itemType": {
+      "commandExecution": "Command execution",
+      "agentMessage": "Assistant message",
+      "reasoning": "Reasoning",
+      "mcpToolCall": "MCP tool call",
+      "webSearch": "Web search",
+      "todoList": "Todo list",
+      "fileChange": "File change",
+      "toolCall": "Tool call",
+      "unknown": "Unknown type"
+    },
+    "group": {
+      "commandExecution": "Command execution",
+      "toolCall": "Tool call",
+      "withName": "{group} - {name}"
+    }
+  },
   "codeAssistant": {
     "title": "Code Assistant",
     "inputPlaceholder": "Enter your coding question or requirements...",

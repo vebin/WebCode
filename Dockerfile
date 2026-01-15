@@ -106,6 +106,9 @@ COPY --from=publish /app/publish .
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
+# 复制 Claude Code Skills 到容器
+COPY skills/ /app/skills/
+
 # ============================================
 # 创建非 root 用户以提高安全性
 # ============================================

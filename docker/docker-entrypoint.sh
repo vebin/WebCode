@@ -13,13 +13,18 @@ echo "============================================"
 # ============================================
 # 生成 Codex 配置文件
 # ============================================
+# 提前设置 HOME 为 appuser 的家目录，确保配置文件创建在正确的位置
+export HOME="/home/appuser"
+export USER="appuser"
+
 echo "Generating Codex configuration..."
 
 CODEX_CONFIG_DIR="$HOME/.codex"
 CODEX_CONFIG_FILE="${CODEX_CONFIG_DIR}/config.toml"
 
-# 确保配置目录存在
+# 确保配置目录存在并属于 appuser
 mkdir -p "${CODEX_CONFIG_DIR}"
+chown -R appuser:appuser "${CODEX_CONFIG_DIR}"
 
 # 使用环境变量生成配置文件
 cat > "${CODEX_CONFIG_FILE}" << EOF
@@ -159,5 +164,5 @@ echo "Starting WebCodeCli application as appuser..."
 echo "============================================"
 
 # 使用 setpriv 切换到 appuser 用户执行命令
-# 注意：需要设置 HOME 环境变量，否则 codex/claude 会尝试读取 /root/.codex
-exec setpriv --reuid=appuser --regid=appuser --clear-groups env HOME="/home/appuser" "$@"
+# 注意：HOME 环境变量已在脚本开头设置
+exec setpriv --reuid=appuser --regid=appuser --clear-groups "$@"

@@ -56,7 +56,11 @@ services:
       - ./webcodecli-workspaces:/app/workspaces
       # 日志持久化
       - ./webcodecli-logs:/app/logs
-    
+
+    # 端口映射
+    ports:
+      - "5000:5000"
+
     # 资源限制
     deploy:
       resources:

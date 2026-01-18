@@ -111,6 +111,31 @@ public partial class Setup : ComponentBase
             new() { Key = "CODEX_MODEL_REASONING_EFFORT", Value = "" },
             new() { Key = "CODEX_SANDBOX_MODE", Value = "" }
         };
+
+        // OpenCode 默认环境变量
+        _openCodeEnvVars = new List<EnvVarItem>
+        {
+            new() { Key = "OPENCODE_AUTO_SHARE", Value = "" },
+            new() { Key = "OPENCODE_GIT_BASH_PATH", Value = "" },
+            new() { Key = "OPENCODE_CONFIG", Value = "" },
+            new() { Key = "OPENCODE_CONFIG_DIR", Value = "" },
+            new() { Key = "OPENCODE_CONFIG_CONTENT", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_AUTOUPDATE", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_PRUNE", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_TERMINAL_TITLE", Value = "" },
+            new() { Key = "OPENCODE_PERMISSION", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_DEFAULT_PLUGINS", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_LSP_DOWNLOAD", Value = "" },
+            new() { Key = "OPENCODE_ENABLE_EXPERIMENTAL_MODELS", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_AUTOCOMPACT", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_CLAUDE_CODE", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_CLAUDE_CODE_PROMPT", Value = "" },
+            new() { Key = "OPENCODE_DISABLE_CLAUDE_CODE_SKILLS", Value = "" },
+            new() { Key = "OPENCODE_CLIENT", Value = "" },
+            new() { Key = "OPENCODE_ENABLE_EXA", Value = "" },
+            new() { Key = "OPENCODE_SERVER_PASSWORD", Value = "" },
+            new() { Key = "OPENCODE_SERVER_USERNAME", Value = "" }
+        };
     }
 
     private string GetStepClass(int step)
@@ -129,6 +154,7 @@ public partial class Setup : ComponentBase
             1 => T("setup.step1Title"),
             2 => T("setup.step2Title"),
             3 => T("setup.step3Title"),
+            4 => T("setup.step4Title"),
             _ => ""
         };
     }
@@ -160,7 +186,7 @@ public partial class Setup : ComponentBase
             }
         }
 
-        if (_currentStep < 3)
+        if (_currentStep < 4)
         {
             _currentStep++;
             StateHasChanged();
@@ -183,12 +209,16 @@ public partial class Setup : ComponentBase
         {
             _claudeEnvVars.Clear();
         }
+        if (_currentStep == 3)
+        {
+            _codexEnvVars.Clear();
+        }
         NextStep();
     }
 
     private async Task SkipAndComplete()
     {
-        _codexEnvVars.Clear();
+        _openCodeEnvVars.Clear();
         await CompleteSetup();
     }
 
@@ -206,6 +236,10 @@ public partial class Setup : ComponentBase
                 .ToDictionary(e => e.Key, e => e.Value);
 
             _config.CodexEnvVars = _codexEnvVars
+                .Where(e => !string.IsNullOrWhiteSpace(e.Key) && !string.IsNullOrWhiteSpace(e.Value))
+                .ToDictionary(e => e.Key, e => e.Value);
+
+            _config.OpenCodeEnvVars = _openCodeEnvVars
                 .Where(e => !string.IsNullOrWhiteSpace(e.Key) && !string.IsNullOrWhiteSpace(e.Value))
                 .ToDictionary(e => e.Key, e => e.Value);
 
@@ -291,6 +325,28 @@ public partial class Setup : ComponentBase
             "CODEX_APPROVAL_POLICY" => T("setup.placeholders.codexApprovalPolicy"),
             "CODEX_MODEL_REASONING_EFFORT" => T("setup.placeholders.codexModelReasoningEffort"),
             "CODEX_SANDBOX_MODE" => T("setup.placeholders.codexSandboxMode"),
+
+            // OpenCode 相关
+            "OPENCODE_AUTO_SHARE" => T("setup.placeholders.opencodeAutoShare"),
+            "OPENCODE_GIT_BASH_PATH" => T("setup.placeholders.opencodeGitBashPath"),
+            "OPENCODE_CONFIG" => T("setup.placeholders.opencodeConfig"),
+            "OPENCODE_CONFIG_DIR" => T("setup.placeholders.opencodeConfigDir"),
+            "OPENCODE_CONFIG_CONTENT" => T("setup.placeholders.opencodeConfigContent"),
+            "OPENCODE_DISABLE_AUTOUPDATE" => T("setup.placeholders.opencodeDisableAutoupdate"),
+            "OPENCODE_DISABLE_PRUNE" => T("setup.placeholders.opencodeDisablePrune"),
+            "OPENCODE_DISABLE_TERMINAL_TITLE" => T("setup.placeholders.opencodeDisableTerminalTitle"),
+            "OPENCODE_PERMISSION" => T("setup.placeholders.opencodePermission"),
+            "OPENCODE_DISABLE_DEFAULT_PLUGINS" => T("setup.placeholders.opencodeDisableDefaultPlugins"),
+            "OPENCODE_DISABLE_LSP_DOWNLOAD" => T("setup.placeholders.opencodeDisableLspDownload"),
+            "OPENCODE_ENABLE_EXPERIMENTAL_MODELS" => T("setup.placeholders.opencodeEnableExperimentalModels"),
+            "OPENCODE_DISABLE_AUTOCOMPACT" => T("setup.placeholders.opencodeDisableAutocompact"),
+            "OPENCODE_DISABLE_CLAUDE_CODE" => T("setup.placeholders.opencodeDisableClaudeCode"),
+            "OPENCODE_DISABLE_CLAUDE_CODE_PROMPT" => T("setup.placeholders.opencodeDisableClaudeCodePrompt"),
+            "OPENCODE_DISABLE_CLAUDE_CODE_SKILLS" => T("setup.placeholders.opencodeDisableClaudeCodeSkills"),
+            "OPENCODE_CLIENT" => T("setup.placeholders.opencodeClient"),
+            "OPENCODE_ENABLE_EXA" => T("setup.placeholders.opencodeEnableExa"),
+            "OPENCODE_SERVER_PASSWORD" => T("setup.placeholders.opencodeServerPassword"),
+            "OPENCODE_SERVER_USERNAME" => T("setup.placeholders.opencodeServerUsername"),
             
             _ => T("setup.placeholders.default")
         };

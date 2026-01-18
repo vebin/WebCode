@@ -85,6 +85,11 @@ public class SystemInitConfig
     /// Codex 环境变量
     /// </summary>
     public Dictionary<string, string> CodexEnvVars { get; set; } = new();
+
+    /// <summary>
+    /// OpenCode 环境变量
+    /// </summary>
+    public Dictionary<string, string> OpenCodeEnvVars { get; set; } = new();
 }
 
 /// <summary>
@@ -121,6 +126,11 @@ public class SystemConfigSummary
     /// Codex 是否已配置
     /// </summary>
     public bool CodexConfigured { get; set; }
+
+    /// <summary>
+    /// OpenCode 是否已配置
+    /// </summary>
+    public bool OpenCodeConfigured { get; set; }
 }
 
 /// <summary>
@@ -217,7 +227,14 @@ public class SystemSettingsService : ISystemSettingsService
                 _logger.LogInformation("已保存 Codex 环境变量配置");
             }
 
-            // 6. 标记系统已初始化
+            // 6. 保存 OpenCode 环境变量
+            if (config.OpenCodeEnvVars.Any())
+            {
+                await _envRepository.SaveEnvironmentVariablesAsync("opencode", config.OpenCodeEnvVars);
+                _logger.LogInformation("已保存 OpenCode 环境变量配置");
+            }
+
+            // 7. 标记系统已初始化
             await _repository.SetBoolAsync(SystemSettingsKeys.SystemInitialized, true, "系统已完成初始化");
 
             _logger.LogInformation("系统初始化配置完成");
@@ -299,6 +316,10 @@ public class SystemSettingsService : ISystemSettingsService
         // 检查 Codex 配置
         var codexEnvVars = await _envRepository.GetEnvironmentVariablesByToolIdAsync("codex");
         summary.CodexConfigured = codexEnvVars.Any();
+
+        // 检查 OpenCode 配置
+        var openCodeEnvVars = await _envRepository.GetEnvironmentVariablesByToolIdAsync("opencode");
+        summary.OpenCodeConfigured = openCodeEnvVars.Any();
 
         return summary;
     }

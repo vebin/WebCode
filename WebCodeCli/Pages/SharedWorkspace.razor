@@ -182,7 +182,7 @@
             </div>
 
             <!-- 右侧：内容预览区 -->
-            <div class="flex-1 flex flex-col bg-white">
+            <div class="flex-1 flex flex-col bg-white h-full">
                 @if (_activeTab == "chat")
                 {
                     <!-- 聊天记录展示区 -->
@@ -203,7 +203,7 @@
                     </div>
 
                     <!-- 内容列表 -->
-                    <div class="flex-1 overflow-hidden">
+                    <div class="flex-1 overflow-y-auto h-full">
                         @if (HasOutputEvents)
                         {
                             <!-- 使用通用输出结果组件 -->
@@ -278,43 +278,26 @@
                         <span class="text-sm text-gray-600 font-mono">@_selectedFilePath</span>
                     </div>
 
-                    <!-- 文件内容 -->
-                    <div class="flex-1 overflow-auto">
-                        @if (_isLoadingFile)
-                        {
-                            <div class="flex items-center justify-center h-full">
-                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                            </div>
-                        }
-                        else if (_isImageFile)
-                        {
-                            <div class="p-4 flex items-center justify-center h-full bg-gray-100">
-                                <img src="@_imagePreviewUrl" alt="@_selectedFilePath" class="max-w-full max-h-full object-contain shadow-lg rounded" />
-                            </div>
-                        }
-                        else if (_isHtmlFile)
-                        {
-                            <iframe src="@_htmlPreviewUrl" 
-                                    class="w-full h-full border-0" 
-                                    sandbox="allow-scripts allow-same-origin"
-                                    referrerpolicy="no-referrer"></iframe>
-                        }
-                        else if (_isCodeFile)
-                        {
-                            <div class="max-h-[calc(100vh-12rem)] overflow-y-auto bg-gray-900">
-                                <pre class="!m-0 !p-4"><code id="shared-code-preview" class="language-@_language !text-sm">@_fileContent</code></pre>
-                            </div>
-                        }
-                        else
-                        {
-                            <pre class="p-4 text-sm font-mono text-gray-800 whitespace-pre-wrap break-all">@_fileContent</pre>
-                        }
+                    <!-- 文件内容预览 -->
+                    <div class="flex-1 overflow-hidden h-full">
+                        <FilePreviewPanel 
+                            PreviewType="@_previewType"
+                            FileName="@_selectedFilePath"
+                            FileContent="@_fileContent"
+                            Language="@_language"
+                            ImageUrl="@_imagePreviewUrl"
+                            HtmlUrl="@_htmlPreviewUrl"
+                            IsLoading="@_isLoadingFile"
+                            CodeElementId="shared-code-preview"
+                            ShowLineNumbers="true"
+                            FullHeight="true"
+                            ContainerClass="h-full w-full" />
                     </div>
                 }
                 else
                 {
                     <!-- 空状态 -->
-                    <div class="flex-1 flex items-center justify-center">
+                    <div class="flex-1 flex items-center justify-center h-full">
                         <div class="text-center text-gray-400">
                             <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -345,9 +328,7 @@
     private string _selectedFilePath = string.Empty;
     private string _fileContent = string.Empty;
     private bool _isLoadingFile = false;
-    private bool _isImageFile = false;
-    private bool _isHtmlFile = false;
-    private bool _isCodeFile = false;
+    private FilePreviewPanel.FilePreviewType _previewType = FilePreviewPanel.FilePreviewType.None;
     private string _language = "plaintext";
     private string _imagePreviewUrl = string.Empty;
     private string _htmlPreviewUrl = string.Empty;
@@ -496,29 +477,31 @@
         _selectedFilePath = node.Path;
         _isLoadingFile = true;
         _fileContent = string.Empty;
-        _isImageFile = false;
-        _isHtmlFile = false;
-        _isCodeFile = false;
+        _previewType = FilePreviewPanel.FilePreviewType.None;
         _language = "plaintext";
+        _imagePreviewUrl = string.Empty;
+        _htmlPreviewUrl = string.Empty;
         StateHasChanged();
 
         try
         {
             var ext = node.Extension?.ToLower() ?? "";
             
+            // 使用组件的方法确定预览类型
+            _previewType = FilePreviewPanel.GetPreviewTypeFromExtension(ext);
+            
             // 检查是否为图片
-            if (new[] { ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp" }.Contains(ext))
+            if (_previewType == FilePreviewPanel.FilePreviewType.Image)
             {
-                _isImageFile = true;
                 _imagePreviewUrl = $"/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}?token={Uri.EscapeDataString(_accessToken)}";
             }
             // 检查是否为 HTML
-            else if (new[] { ".html", ".htm" }.Contains(ext))
+            else if (_previewType == FilePreviewPanel.FilePreviewType.Html)
             {
-                _isHtmlFile = true;
                 _htmlPreviewUrl = $"/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}?token={Uri.EscapeDataString(_accessToken)}";
             }
-            else
+            // 代码或文本文件
+            else if (_previewType == FilePreviewPanel.FilePreviewType.Code || _previewType == FilePreviewPanel.FilePreviewType.Text)
             {
                 // 文本文件，获取内容
                 var request = new HttpRequestMessage(HttpMethod.Get, $"/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}");
@@ -530,38 +513,31 @@
                 {
                     _fileContent = await response.Content.ReadAsStringAsync();
                     
-                    // 检查是否为代码文件并设置语言
-                    _language = GetLanguageFromExtension(ext);
-                    _isCodeFile = _language != "plaintext";
+                    // 获取语言
+                    _language = FilePreviewPanel.GetLanguageFromExtension(ext);
+                    
+                    // 对于 JSON 文件，尝试格式化
+                    if (ext == ".json" && !string.IsNullOrEmpty(_fileContent))
+                    {
+                        _fileContent = FilePreviewPanel.FormatJsonContent(_fileContent);
+                    }
                 }
                 else
                 {
                     _fileContent = "无法加载文件内容";
+                    _previewType = FilePreviewPanel.FilePreviewType.Text;
                 }
             }
         }
         catch (Exception ex)
         {
             _fileContent = $"加载失败: {ex.Message}";
+            _previewType = FilePreviewPanel.FilePreviewType.Text;
         }
         finally
         {
             _isLoadingFile = false;
             StateHasChanged();
-            
-            // 如果是代码文件，应用语法高亮
-            if (_isCodeFile && !string.IsNullOrEmpty(_fileContent))
-            {
-                await Task.Delay(50);
-                try
-                {
-                    await JSRuntime.InvokeVoidAsync("applyCodeHighlight");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"应用语法高亮失败: {ex.Message}");
-                }
-            }
         }
     }
 
@@ -807,48 +783,6 @@
     private void GoBack()
     {
         NavigationManager.NavigateTo("/");
-    }
-
-    private string GetLanguageFromExtension(string extension)
-    {
-        return extension switch
-        {
-            ".html" or ".htm" => "html",
-            ".css" => "css",
-            ".js" => "javascript",
-            ".ts" => "typescript",
-            ".jsx" => "jsx",
-            ".tsx" => "tsx",
-            ".json" => "json",
-            ".xml" => "xml",
-            ".cs" => "csharp",
-            ".java" => "java",
-            ".py" => "python",
-            ".rb" => "ruby",
-            ".php" => "php",
-            ".go" => "go",
-            ".rs" => "rust",
-            ".sql" => "sql",
-            ".sh" or ".bash" => "bash",
-            ".ps1" => "powershell",
-            ".yaml" or ".yml" => "yaml",
-            ".md" => "markdown",
-            ".vue" => "markup",
-            ".razor" => "cshtml",
-            ".cpp" or ".cc" => "cpp",
-            ".c" => "c",
-            ".swift" => "swift",
-            ".kt" => "kotlin",
-            ".dart" => "dart",
-            ".r" => "r",
-            ".scala" => "scala",
-            ".dockerfile" => "docker",
-            ".csproj" or ".sln" or ".props" or ".targets" => "xml",
-            ".config" or ".ini" => "ini",
-            ".env" => "bash",
-            ".gitignore" or ".editorconfig" => "plaintext",
-            _ => "plaintext"
-        };
     }
 
     private class SharedSessionInfo

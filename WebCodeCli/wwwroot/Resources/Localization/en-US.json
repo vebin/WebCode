@@ -349,7 +349,6 @@
     "priority": "Priority",
     "createdAt": "Created at",
     "copy": "Copy content",
-    "copied": "Copied",
     "compressing": "Compressing...",
     "compressStart": "Start compress",
     "compress": {

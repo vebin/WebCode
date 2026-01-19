@@ -504,15 +504,18 @@
             // 使用组件的方法确定预览类型
             _previewType = FilePreviewPanel.GetPreviewTypeFromExtension(ext);
             
+            // 对路径进行正确的编码：对路径的每个部分分别编码，保留斜杠
+            var encodedPath = EncodePathForUrl(node.Path);
+            
             // 检查是否为图片
             if (_previewType == FilePreviewPanel.FilePreviewType.Image)
             {
-                _imagePreviewUrl = $"/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}?token={Uri.EscapeDataString(_accessToken)}";
+                _imagePreviewUrl = $"/api/share/{ShareCode}/workspace/file/{encodedPath}?token={Uri.EscapeDataString(_accessToken)}";
             }
             // 检查是否为 HTML
             else if (_previewType == FilePreviewPanel.FilePreviewType.Html)
             {
-                _htmlPreviewUrl = $"/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}?token={Uri.EscapeDataString(_accessToken)}";
+                _htmlPreviewUrl = $"/api/share/{ShareCode}/workspace/file/{encodedPath}?token={Uri.EscapeDataString(_accessToken)}";
             }
             // 检查是否为 Office 文档
             else if (_previewType == FilePreviewPanel.FilePreviewType.Office)
@@ -521,7 +524,7 @@
                 StateHasChanged();
 
                 // 构建文件访问 URL
-                var fileUrl = $"{NavigationManager.BaseUri.TrimEnd('/')}/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}?token={Uri.EscapeDataString(_accessToken)}";
+                var fileUrl = $"{NavigationManager.BaseUri.TrimEnd('/')}/api/share/{ShareCode}/workspace/file/{encodedPath}?token={Uri.EscapeDataString(_accessToken)}";
                 
                 // 生成 Office 预览 URL
                 var (previewUrl, errorMessage) = FilePreviewPanel.GenerateOfficePreviewUrl(fileUrl, NavigationManager.BaseUri);
@@ -534,7 +537,7 @@
             else if (_previewType == FilePreviewPanel.FilePreviewType.Code || _previewType == FilePreviewPanel.FilePreviewType.Text)
             {
                 // 文本文件，获取内容
-                var request = new HttpRequestMessage(HttpMethod.Get, $"/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}");
+                var request = new HttpRequestMessage(HttpMethod.Get, $"/api/share/{ShareCode}/workspace/file/{encodedPath}");
                 request.Headers.Add("X-Share-Token", _accessToken);
 
                 var response = await Http.SendAsync(request);
@@ -910,6 +913,22 @@
     private void GoBack()
     {
         NavigationManager.NavigateTo("/");
+    }
+
+    /// <summary>
+    /// 对文件路径进行 URL 编码，保留路径分隔符
+    /// </summary>
+    private string EncodePathForUrl(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return string.Empty;
+        }
+
+        // 将路径按斜杠分割，对每个部分分别编码，然后重新组合
+        var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var encodedParts = parts.Select(p => Uri.EscapeDataString(p));
+        return string.Join("/", encodedParts);
     }
 
     private class SharedSessionInfo

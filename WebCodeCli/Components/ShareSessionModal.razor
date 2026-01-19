@@ -249,6 +249,21 @@
                                             <div class="flex items-center gap-1 ml-2">
                                                 @if (share.IsActive && !share.IsExpired)
                                                 {
+                                                    <button @onclick="() => RefreshShareSnapshot(share.ShareCode)"
+                                                            disabled="@(_isRefreshingSnapshot == share.ShareCode)"
+                                                            class="p-1.5 hover:bg-blue-100 rounded transition-colors disabled:opacity-50"
+                                                            title="刷新快照（同步最新聊天记录）">
+                                                        @if (_isRefreshingSnapshot == share.ShareCode)
+                                                        {
+                                                            <div class="w-4 h-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                            </svg>
+                                                        }
+                                                    </button>
                                                     <button @onclick="() => CopyShareUrlByCode(share.ShareUrl)"
                                                             class="p-1.5 hover:bg-gray-100 rounded transition-colors"
                                                             title="复制链接">
@@ -300,6 +315,7 @@
     // 管理分享
     private List<ShareInfoResponse> _existingShares = new();
     private bool _isLoadingShares = false;
+    private string? _isRefreshingSnapshot = null; // 正在刷新的分享码
     
     // 会话数据 (从父组件传入)
     private string? _sessionTitle;
@@ -461,6 +477,51 @@
         catch (Exception ex)
         {
             Console.WriteLine($"删除分享失败: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshShareSnapshot(string shareCode)
+    {
+        if (string.IsNullOrEmpty(_messagesJson) && string.IsNullOrEmpty(_sessionTitle))
+        {
+            Console.WriteLine("没有可更新的会话数据");
+            return;
+        }
+
+        try
+        {
+            _isRefreshingSnapshot = shareCode;
+            StateHasChanged();
+
+            var request = new
+            {
+                SessionTitle = _sessionTitle,
+                ToolId = _toolId,
+                WorkspacePath = _workspacePath,
+                MessagesJson = _messagesJson,
+                SessionUpdatedAt = DateTime.Now
+            };
+
+            var response = await Http.PutAsJsonAsync($"/api/share/{shareCode}/snapshot", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"分享快照已刷新: {shareCode}");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"刷新分享快照失败: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"刷新分享快照失败: {ex.Message}");
+        }
+        finally
+        {
+            _isRefreshingSnapshot = null;
+            StateHasChanged();
         }
     }
 

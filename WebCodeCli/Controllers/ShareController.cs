@@ -416,6 +416,38 @@ public class ShareController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// 更新分享快照
+    /// PUT /api/share/{shareCode}/snapshot
+    /// </summary>
+    [HttpPut("{shareCode}/snapshot")]
+    public async Task<IActionResult> UpdateShareSnapshot(string shareCode, [FromBody] UpdateShareSnapshotRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(shareCode))
+            {
+                return BadRequest(new { error = "分享码不能为空" });
+            }
+
+            var result = await _shareService.UpdateShareSnapshotAsync(shareCode, request);
+
+            if (!result)
+            {
+                return NotFound(new { error = "分享不存在" });
+            }
+
+            _logger.LogInformation("分享快照已更新: ShareCode={ShareCode}", shareCode);
+
+            return Ok(new { message = "分享快照已更新" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "更新分享快照失败: ShareCode={ShareCode}", shareCode);
+            return StatusCode(500, new { error = "更新分享快照失败", message = ex.Message });
+        }
+    }
+
     #region 私有方法
 
     /// <summary>

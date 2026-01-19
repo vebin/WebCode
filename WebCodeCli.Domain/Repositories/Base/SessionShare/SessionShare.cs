@@ -322,3 +322,34 @@ public class SharedSessionData
     /// </summary>
     public bool IsWorkspaceValid { get; set; }
 }
+
+/// <summary>
+/// 更新分享快照请求DTO
+/// </summary>
+public class UpdateShareSnapshotRequest
+{
+    /// <summary>
+    /// 会话标题
+    /// </summary>
+    public string? SessionTitle { get; set; }
+    
+    /// <summary>
+    /// 使用的工具ID
+    /// </summary>
+    public string? ToolId { get; set; }
+    
+    /// <summary>
+    /// 工作区路径
+    /// </summary>
+    public string? WorkspacePath { get; set; }
+    
+    /// <summary>
+    /// 会话消息 (JSON格式)
+    /// </summary>
+    public string? MessagesJson { get; set; }
+    
+    /// <summary>
+    /// 会话更新时间
+    /// </summary>
+    public DateTime? SessionUpdatedAt { get; set; }
+}

@@ -94,4 +94,12 @@ public interface ISessionShareService
     /// </summary>
     /// <returns>清理数量</returns>
     Task<int> CleanupExpiredSharesAsync();
+    
+    /// <summary>
+    /// 更新分享的会话数据快照
+    /// </summary>
+    /// <param name="shareCode">分享码</param>
+    /// <param name="request">更新请求</param>
+    /// <returns>是否成功</returns>
+    Task<bool> UpdateShareSnapshotAsync(string shareCode, UpdateShareSnapshotRequest request);
 }

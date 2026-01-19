@@ -3863,10 +3863,25 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         if (_shareSessionModal != null)
         {
             // 序列化消息为JSON
+            // 如果分享的是当前会话，使用最新的 _messages 列表，而不是 session.Messages
+            // 因为在用户输入过程中，_messages 是最新的数据源，而 session.Messages 只有在保存后才会更新
             string? messagesJson = null;
-            if (session.Messages != null && session.Messages.Count > 0)
+            List<ChatMessage>? messagesToShare = null;
+            
+            if (session.SessionId == _sessionId && _messages != null && _messages.Count > 0)
             {
-                messagesJson = System.Text.Json.JsonSerializer.Serialize(session.Messages);
+                // 分享的是当前会话，使用最新的消息列表
+                messagesToShare = _messages;
+            }
+            else if (session.Messages != null && session.Messages.Count > 0)
+            {
+                // 分享的是其他会话，使用会话自带的消息
+                messagesToShare = session.Messages;
+            }
+            
+            if (messagesToShare != null && messagesToShare.Count > 0)
+            {
+                messagesJson = System.Text.Json.JsonSerializer.Serialize(messagesToShare);
             }
             
             await _shareSessionModal.ShowAsync(

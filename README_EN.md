@@ -99,6 +99,15 @@ WebCodeCli is fully optimized for mobile devices:
 - **Portrait/Landscape Switching** - Seamless switching without content loss
 - **Virtual Keyboard Adaptation** - Auto-adjusts viewport during input
 
+### 📱 Mobile-Compatible UI
+
+- **Top navigation & quick actions** - Small-screen-first layout with fast access to core tools
+- **Chat bubble layout** - Clear reading and smooth scrolling
+- **Bottom input & shortcuts** - Touch-friendly controls that reduce mis-taps
+- **Bottom tab bar** - Quick access to Chat / Output / Files / Preview / Settings
+
+![Mobile UI](images/mobile.png)
+
 ### Tested Device Support
 
 - ✅ iPhone SE / iPhone 12-14 / iPhone Pro Max

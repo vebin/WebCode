@@ -331,7 +331,7 @@
     "descReset": "Click 'Reset to Default' to restore values from config file",
     "keyLabel": "Key",
     "keyPlaceholder": "e.g.: OPENAI_API_KEY",
-    "valueLabel": "Value (set only, not viewable)",
+    "valueLabel": "Value",
     "valuePlaceholder": "Enter value...",
     "clearValueTitle": "Clear value to reset",
     "removeTitle": "Remove this environment variable",

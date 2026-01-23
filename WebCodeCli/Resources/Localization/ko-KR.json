@@ -378,7 +378,7 @@
     "descReset": "\"기본값으로 재설정\"을 클릭하면 설정 파일의 값으로 복원됩니다",
     "keyLabel": "키",
     "keyPlaceholder": "예: OPENAI_API_KEY",
-    "valueLabel": "값(설정만 가능, 확인 불가)",
+    "valueLabel": "값",
     "valuePlaceholder": "값 입력...",
     "clearValueTitle": "값을 비워 다시 설정",
     "removeTitle": "이 환경 변수를 삭제",

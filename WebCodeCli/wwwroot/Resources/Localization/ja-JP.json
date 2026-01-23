@@ -378,7 +378,7 @@
     "descReset": "「既定に戻す」をクリックすると設定ファイルの内容に戻ります",
     "keyLabel": "キー",
     "keyPlaceholder": "例: OPENAI_API_KEY",
-    "valueLabel": "値（設定のみ、閲覧不可）",
+    "valueLabel": "値",
     "valuePlaceholder": "値を入力...",
     "clearValueTitle": "値をクリアして再設定",
     "removeTitle": "この環境変数を削除",

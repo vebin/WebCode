@@ -331,7 +331,7 @@
     "descReset": "点击\"重置为默认\"可恢复配置文件中的设置",
     "keyLabel": "键名",
     "keyPlaceholder": "例如: OPENAI_API_KEY",
-    "valueLabel": "键值 (仅可设置，不可查看)",
+    "valueLabel": "键值",
     "valuePlaceholder": "输入值...",
     "clearValueTitle": "清空值以重新设置",
     "removeTitle": "删除此环境变量",

@@ -10,6 +10,7 @@ public partial class QuickActionsPanel : ComponentBase
 {
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] private ILocalizationService L { get; set; } = default!;
+    [Inject] private IQuickActionService QuickActionService { get; set; } = default!;
 
     [Parameter] public EventCallback<string> OnActionSelected { get; set; }
     [Parameter] public bool DefaultCollapsed { get; set; } = true;
@@ -28,7 +29,6 @@ public partial class QuickActionsPanel : ComponentBase
 
     private string LocalizedTitle => T("quickActions.title");
     private string LocalizedCustomize => T("quickActions.customize");
-    private const string StorageKey = "webcli_quick_actions";
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -48,36 +48,19 @@ public partial class QuickActionsPanel : ComponentBase
 
         try
         {
-            // 等待 IndexedDB 准备就绪
-            var isReady = await WaitForIndexedDBReady();
+            // 从后端加载快捷操作
+            var savedActions = await QuickActionService.GetAllAsync();
             
-            if (isReady)
+            if (savedActions is { Count: > 0 })
             {
-                // 使用 IndexedDB 加载
-                var savedActions = await JSRuntime.InvokeAsync<List<QuickAction>?>(
-                    "webCliIndexedDB.getAllQuickActions");
-                
-                if (savedActions is { Count: > 0 })
-                {
-                    _actions = savedActions;
-                    Console.WriteLine($"[快捷操作] 成功从 IndexedDB 加载 {savedActions.Count} 个快捷操作");
-                }
-                else
-                {
-                    Console.WriteLine("[快捷操作] IndexedDB 无数据，初始化默认快捷操作");
-                    await ResetActionsToDefaultAsync();
-                }
+                _actions = savedActions;
+                Console.WriteLine($"[快捷操作] 成功从后端加载 {savedActions.Count} 个快捷操作");
             }
             else
             {
-                Console.WriteLine("[快捷操作] IndexedDB 未就绪，使用默认快捷操作");
-                _actions = GetDefaultActions();
+                Console.WriteLine("[快捷操作] 后端无数据，初始化默认快捷操作");
+                await ResetActionsToDefaultAsync();
             }
-        }
-        catch (JSException jsEx)
-        {
-            Console.WriteLine($"[快捷操作] JS 交互异常，已回退默认快捷操作: {jsEx.Message}");
-            _actions = GetDefaultActions();
         }
         catch (Exception ex)
         {
@@ -89,32 +72,6 @@ public partial class QuickActionsPanel : ComponentBase
             _isLoading = false;
             StateHasChanged();
         }
-    }
-    
-    /// <summary>
-    /// 等待 IndexedDB 准备就绪
-    /// </summary>
-    private async Task<bool> WaitForIndexedDBReady(int maxWaitMs = 3000)
-    {
-        var startTime = DateTime.Now;
-        while ((DateTime.Now - startTime).TotalMilliseconds < maxWaitMs)
-        {
-            try
-            {
-                var isReady = await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady");
-                if (isReady)
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略错误，继续等待
-            }
-            
-            await Task.Delay(50);
-        }
-        return false;
     }
 
     private List<QuickAction> GetDefaultActions()
@@ -194,9 +151,9 @@ public partial class QuickActionsPanel : ComponentBase
     {
         try
         {
-            // 使用 IndexedDB 保存
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveAllQuickActions", _actions);
-            Console.WriteLine($"[快捷操作] 已保存 {_actions.Count} 个快捷操作到 IndexedDB");
+            // 使用后端服务保存
+            await QuickActionService.SaveAllAsync(_actions);
+            Console.WriteLine($"[快捷操作] 已保存 {_actions.Count} 个快捷操作到后端");
         }
         catch (Exception ex)
         {
@@ -327,52 +284,15 @@ public partial class QuickActionsPanel : ComponentBase
         _actions = GetDefaultActions();
         try
         {
-            // 清除 IndexedDB 中的快捷操作
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.clearAllQuickActions");
-            Console.WriteLine("[快捷操作] 已清除 IndexedDB 中的快捷操作");
+            // 清除后端的快捷操作并保存默认值
+            await QuickActionService.ClearAsync();
+            Console.WriteLine("[快捷操作] 已清除后端的快捷操作");
             await SaveActionsAsync();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[快捷操作] 重置存储失败: {ex.Message}");
         }
-    }
-
-    private static string NormalizeSavedJson(string savedJson)
-    {
-        var trimmed = savedJson.Trim();
-
-        // 检查是否为空或无效字符
-        if (string.IsNullOrEmpty(trimmed))
-        {
-            throw new JsonException("数据为空字符串");
-        }
-
-        // 检查是否以有效的 JSON 字符开头
-        if (!trimmed.StartsWith("[") && !trimmed.StartsWith("{") && !trimmed.StartsWith("\""))
-        {
-            throw new JsonException($"无效的 JSON 起始字符: '{trimmed[0]}'");
-        }
-
-        // 处理可能出现的双重序列化场景（例如字符串里再次包裹了 JSON）
-        if (trimmed.StartsWith("\"[") && trimmed.EndsWith("]\""))
-        {
-            try
-            {
-                var unescaped = JsonSerializer.Deserialize<string>(trimmed, JsonOptions);
-                if (!string.IsNullOrEmpty(unescaped))
-                {
-                    return unescaped;
-                }
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"[快捷操作] 解包双重序列化失败: {ex.Message}");
-                // 如果解包失败，继续使用原始字符串进入后续容错流程
-            }
-        }
-
-        return trimmed;
     }
 
     private class ActionFormModel
@@ -464,4 +384,3 @@ public partial class QuickActionsPanel : ComponentBase
 
     #endregion
 }
-

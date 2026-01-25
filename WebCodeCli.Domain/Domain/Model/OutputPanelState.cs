@@ -11,7 +11,7 @@ public class OutputPanelState
     /// 非 JSONL 模式下的原始输出（会作为 Markdown 渲染）。
     /// JSONL 模式下也可能用于展示最终 assistant 文本。
     /// </summary>
-    public string RawOutput { get; set; } = string.Empty;
+    public string? RawOutput { get; set; } = string.Empty;
 
     /// <summary>
     /// 是否启用 JSONL 流式输出模式。
@@ -27,6 +27,16 @@ public class OutputPanelState
     /// JSONL 事件列表（用于“命令执行/工具调用”等卡片展示）。
     /// </summary>
     public List<OutputJsonlEvent> JsonlEvents { get; set; } = new();
+
+    /// <summary>
+    /// 事件 JSON 字符串（用于数据库存储）
+    /// </summary>
+    public string? EventsJson { get; set; }
+
+    /// <summary>
+    /// 显示的事件数量
+    /// </summary>
+    public int DisplayedEventCount { get; set; } = 20;
 
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }

@@ -39,6 +39,10 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     [Inject] private WebCodeCli.Domain.Domain.Service.ISkillService SkillService { get; set; } = default!;
     [Inject] private ILocalizationService L { get; set; } = default!;
     [Inject] private ISystemSettingsService SystemSettingsService { get; set; } = default!;
+    [Inject] private ISessionOutputService SessionOutputService { get; set; } = default!;
+    [Inject] private IPromptTemplateService PromptTemplateService { get; set; } = default!;
+    [Inject] private IInputHistoryService InputHistoryService { get; set; } = default!;
+    [Inject] private IUserContextService UserContextService { get; set; } = default!;
     
     // 本地化翻译缓存
     private Dictionary<string, string> _translations = new();
@@ -182,6 +186,12 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     // 移动端预览区折叠状态
     private bool _isPreviewCollapsed = false;
 
+    // PC 端左右面板拖拽宽度
+    private int _chatPanelWidth = 600;
+    private const int ChatPanelMinWidth = 360;
+    private const int ChatPanelMaxWidth = 900;
+    private DotNetObjectReference<CodeAssistant>? _splitterDotNetRef;
+
     // 设备类型检测（用于PC/移动端路由跳转）
     private bool _hasCheckedDevice = false;
     
@@ -299,6 +309,30 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
                 return;
             }
         }
+        
+        // 设置用户上下文（用于后端服务按用户隔离数据）
+        // 无论认证是否启用，都需要设置用户上下文
+        try
+        {
+            // 尝试从 sessionStorage 获取用户名
+            var storedUsername = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "username");
+            if (!string.IsNullOrWhiteSpace(storedUsername))
+            {
+                _currentUsername = storedUsername;
+                UserContextService.SetCurrentUsername(storedUsername);
+                Console.WriteLine($"[用户上下文] 从sessionStorage设置当前用户: {storedUsername}");
+            }
+            else
+            {
+                // 如果没有存储的用户名，使用 UserContextService 的默认值
+                var defaultUsername = UserContextService.GetCurrentUsername();
+                Console.WriteLine($"[用户上下文] 使用默认用户: {defaultUsername}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[用户上下文] 设置用户上下文失败: {ex.Message}");
+        }
 
         await LoadAvailableTools();
         
@@ -392,6 +426,21 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
 
                 // 绑定输入框 Tab 技能选择（仅在需要时拦截 Tab）
                 await JSRuntime.InvokeVoidAsync("setupSkillTabSelect", "input-message");
+
+                // 初始化 PC 端左右面板拖拽分隔条
+                _splitterDotNetRef ??= DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("initCodeAssistantSplit", new
+                {
+                    containerId = "code-assistant-split-container",
+                    chatId = "code-assistant-chat-panel",
+                    previewId = "code-assistant-preview-panel",
+                    dividerId = "code-assistant-splitter",
+                    minChatWidth = ChatPanelMinWidth,
+                    maxChatWidth = ChatPanelMaxWidth,
+                    minPreviewWidth = 420,
+                    initialChatWidth = _chatPanelWidth,
+                    dotNetRef = _splitterDotNetRef
+                });
             }
             catch (Exception ex)
             {
@@ -1739,7 +1788,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         // 保存输入历史
         try
         {
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveInputHistory", message);
+            await InputHistoryService.SaveAsync(message);
         }
         catch
         {
@@ -1928,35 +1977,6 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         return Task.CompletedTask;
     }
 
-    private async Task<bool> IsIndexedDbReadyAsync()
-    {
-        try
-        {
-            // 快速路径
-            if (await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady"))
-            {
-                return true;
-            }
-
-            // 页面刚加载时，IndexedDB autoInit 可能还没完成，最多等待 3 秒
-            var retries = 30;
-            while (retries-- > 0)
-            {
-                await Task.Delay(100);
-                if (await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady"))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     private void QueueSaveOutputState(bool forceImmediate = false)
     {
         if (_disposed)
@@ -2035,16 +2055,14 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
             var state = BuildOutputPanelStateSnapshot(sessionId);
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveSessionOutput", state);
+            Console.WriteLine($"[SaveOutputState] 保存会话输出状态: {sessionId}, Events数量={state.JsonlEvents?.Count ?? 0}, RawOutput长度={state.RawOutput?.Length ?? 0}");
+            var result = await SessionOutputService.SaveAsync(state);
+            Console.WriteLine($"[SaveOutputState] 保存结果: {result}");
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[SaveOutputState] 保存失败: {ex.Message}");
             // 持久化失败不影响主流程
         }
     }
@@ -2058,16 +2076,15 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
+            Console.WriteLine($"[LoadOutputState] 开始加载会话输出状态: {sessionId}");
+            var state = await SessionOutputService.GetBySessionIdAsync(sessionId);
+            if (state == null)
             {
+                Console.WriteLine($"[LoadOutputState] 会话输出状态不存在: {sessionId}");
                 return;
             }
 
-            var state = await JSRuntime.InvokeAsync<OutputPanelState?>("webCliIndexedDB.getSessionOutput", sessionId);
-            if (state == null)
-            {
-                return;
-            }
+            Console.WriteLine($"[LoadOutputState] 成功获取输出状态: RawOutput长度={state.RawOutput?.Length ?? 0}, IsJsonlActive={state.IsJsonlOutputActive}, Events数量={state.JsonlEvents?.Count ?? 0}");
 
             _rawOutput = state.RawOutput ?? string.Empty;
             _isJsonlOutputActive = state.IsJsonlOutputActive;
@@ -2099,12 +2116,15 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
                             }
                     });
                 }
+                Console.WriteLine($"[LoadOutputState] 已恢复 {_jsonlEvents.Count} 个事件");
             }
 
             StateHasChanged();
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[LoadOutputState] 加载输出状态失败: {ex.Message}");
+            Console.WriteLine($"[LoadOutputState] 错误堆栈: {ex.StackTrace}");
             // 恢复失败不影响主流程
         }
     }
@@ -2113,12 +2133,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     {
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.deleteSessionOutput", sessionId);
+            await SessionOutputService.DeleteBySessionIdAsync(sessionId);
         }
         catch
         {
@@ -2231,6 +2246,8 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
             await _outputStateSaveTimer.DisposeAsync();
         }
 
+        _splitterDotNetRef?.Dispose();
+
         try
         {
             await JSRuntime.InvokeVoidAsync("disposeSkillTabSelect", "input-message");
@@ -2265,6 +2282,20 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         {
             Console.WriteLine($"清理会话缓存失败: {ex.Message}");
         }
+    }
+
+    private string GetChatPanelStyle()
+    {
+        var width = Math.Clamp(_chatPanelWidth, ChatPanelMinWidth, ChatPanelMaxWidth);
+        return $"width: {width}px; min-width: {ChatPanelMinWidth}px; max-width: {ChatPanelMaxWidth}px;";
+    }
+
+    [JSInvokable]
+    public Task UpdateChatPanelWidth(int width)
+    {
+        _chatPanelWidth = Math.Clamp(width, ChatPanelMinWidth, ChatPanelMaxWidth);
+        StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private async Task LoadWorkspaceFiles()
@@ -3826,7 +3857,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
             _jsonlAssistantMessageBuilder = null;
             _currentAssistantMessage = string.Empty;
 
-            // 从 IndexedDB 恢复输出结果区域（如果存在）
+            // 从数据库恢复输出结果区域（如果存在）
             await LoadOutputStateAsync(_sessionId);
             
             // 关闭会话列表（立即关闭以提升响应速度）
@@ -4900,30 +4931,13 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         {
             var suggestions = new List<Suggestion>();
 
-            // 检查 IndexedDB 是否准备就绪
-            bool isReady = false;
-            try
-            {
-                isReady = await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady");
-            }
-            catch
-            {
-                // IndexedDB 未就绪
-            }
-
-            if (!isReady)
-            {
-                _autoCompleteDropdown?.Hide();
-                return;
-            }
-
             // 检查是否触发模板快速插入（@ 符号）
             if (_inputMessage.Contains("@"))
             {
                 try
                 {
-                    // 从 IndexedDB 获取模板
-                    var templates = await JSRuntime.InvokeAsync<PromptTemplate[]>("webCliIndexedDB.getAllTemplates");
+                    // 从后端获取模板
+                    var templates = await PromptTemplateService.GetAllAsync();
                     if (templates != null)
                     {
                         suggestions.AddRange(templates
@@ -4947,33 +4961,20 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
                 // 从历史记录获取建议
                 try
                 {
-                    var history = await JSRuntime.InvokeAsync<object[]>("webCliIndexedDB.searchInputHistory", _inputMessage, 5);
-                    if (history != null && history.Length > 0)
+                    var history = await InputHistoryService.SearchAsync(_inputMessage, 5);
+                    if (history != null && history.Count > 0)
                     {
                         foreach (var item in history)
                         {
-                            try
+                            if (!string.IsNullOrEmpty(item.Text))
                             {
-                                var json = JsonSerializer.Serialize(item);
-                                var historyItem = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-                                if (historyItem != null && historyItem.ContainsKey("text"))
+                                suggestions.Add(new Suggestion
                                 {
-                                    var text = historyItem["text"].ToString();
-                                    if (!string.IsNullOrEmpty(text))
-                                    {
-                                        suggestions.Add(new Suggestion
-                                        {
-                                            Text = text,
-                                            Description = "历史记录",
-                                            Type = SuggestionType.History,
-                                            UsageCount = 0
-                                        });
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // 忽略解析错误
+                                    Text = item.Text,
+                                    Description = "历史记录",
+                                    Type = SuggestionType.History,
+                                    UsageCount = 0
+                                });
                             }
                         }
                     }

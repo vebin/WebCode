@@ -638,6 +638,116 @@
     "maxLength": "最大長は {max} 文字です",
     "email": "有効なメールアドレスを入力してください",
     "url": "有効なURLを入力してください"
+  },
+  "project": {
+    "title": "プロジェクト",
+    "list": "プロジェクト一覧",
+    "create": "プロジェクト作成",
+    "edit": "プロジェクト編集",
+    "delete": "プロジェクト削除",
+    "clone": "クローン",
+    "pull": "更新を取得",
+    "saving": "保存中...",
+    "saveChanges": "変更を保存",
+    "name": "プロジェクト名",
+    "namePlaceholder": "例：マイプロジェクト",
+    "gitUrl": "Gitリポジトリ URL",
+    "gitUrlPlaceholder": "https://github.com/user/repo.git",
+    "authType": "認証方式",
+    "authTypeNone": "公開リポジトリ（認証不要）",
+    "authTypeHttps": "HTTPS（トークン認証）",
+    "authTypeSsh": "SSH（鍵認証）",
+    "httpsUsername": "ユーザー名（任意）",
+    "httpsUsernamePlaceholder": "git",
+    "httpsToken": "トークン",
+    "httpsTokenPlaceholder": "ghp_xxxx...",
+    "httpsTokenHint": "GitHub Personal Access Tokenまたは他プラットフォームのトークンを使用",
+    "sshPrivateKey": "SSH秘密鍵",
+    "sshPrivateKeyPlaceholder": "-----BEGIN OPENSSH PRIVATE KEY-----",
+    "sshPassphrase": "鍵のパスフレーズ（任意）",
+    "sshPassphrasePlaceholder": "鍵にパスワードが設定されている場合は入力",
+    "branch": "ブランチ",
+    "branchPlaceholder": "main",
+    "fetchBranches": "ブランチを取得",
+    "moreBranches": "+{count} さらに表示",
+    "status": {
+      "pending": "待機中",
+      "cloning": "クローン中",
+      "ready": "準備完了",
+      "error": "エラー"
+    },
+    "noProjects": "プロジェクトがありません",
+    "createFirst": "最初のプロジェクトを作成してください",
+    "lastSync": "同期日時",
+    "selectProject": "プロジェクトを選択",
+    "selectProjectDesc": "新しいセッションのワークスペースを初期化するプロジェクトを選択するか、「空のセッション」を選択してゼロから始めます。",
+    "blankSession": "空のセッション",
+    "blankSessionDesc": "プロジェクトなしで空のワークスペースから開始",
+    "noReadyProjects": "利用可能なプロジェクトがありません",
+    "noReadyProjectsHint": "まずプロジェクトを作成してクローンしてください",
+    "cloneSuccess": "プロジェクトのクローンに成功しました",
+    "pullSuccess": "プロジェクトの更新に成功しました",
+    "createSuccess": "プロジェクトの作成に成功しました",
+    "deleteSuccess": "プロジェクトの削除に成功しました",
+    "saveSuccess": "プロジェクトの保存に成功しました",
+    "error": {
+      "nameRequired": "プロジェクト名は必須です",
+      "gitUrlRequired": "GitリポジトリURLは必須です",
+      "cloneFailed": "プロジェクトのクローンに失敗しました",
+      "pullFailed": "更新の取得に失敗しました",
+      "createFailed": "プロジェクトの作成に失敗しました",
+      "updateFailed": "プロジェクトの更新に失敗しました",
+      "deleteFailed": "プロジェクトの削除に失敗しました",
+      "fetchBranchesFailed": "ブランチの取得に失敗しました"
+    }
+  },
+  "share": {
+    "title": "セッション共有",
+    "tabs": {
+      "create": "共有を作成",
+      "manage": "共有を管理"
+    },
+    "createSuccessTitle": "共有を作成しました！",
+    "createSuccessDesc": "下のリンクをコピーして共有してください",
+    "copyLink": "リンクをコピー",
+    "accessPassword": "アクセスパスワード",
+    "expiresAt": "有効期限",
+    "createNew": "新しい共有を作成",
+    "form": {
+      "title": "共有タイトル（任意）",
+      "titlePlaceholder": "共有の名前を入力...",
+      "password": "アクセスパスワード",
+      "passwordPlaceholder": "4文字以上のパスワードを設定",
+      "passwordHint": "パスワードで共有内容を保護します。安全に保管してください。",
+      "expiration": "有効期限（任意）",
+      "expirationOptions": {
+        "never": "期限なし",
+        "1h": "1時間後",
+        "24h": "24時間後",
+        "7d": "7日後",
+        "30d": "30日後"
+      }
+    },
+    "creating": "作成中...",
+    "createLink": "共有リンクを作成",
+    "noShares": "共有履歴がありません",
+    "createFirst": "最初の共有を作成",
+    "status": {
+      "inactive": "無効",
+      "expired": "期限切れ",
+      "active": "有効"
+    },
+    "createdAt": "作成日時",
+    "viewCount": "閲覧数",
+    "viewLink": "リンクを表示",
+    "refreshSnapshot": "スナップショットを更新（最新のチャットを同期）",
+    "linkLabel": "共有リンク",
+    "passwordHiddenHint": "パスワードは作成時にのみ表示され、再表示できません",
+    "error": {
+      "passwordTooShort": "パスワードは4文字以上必要です",
+      "createFailed": "共有の作成に失敗しました",
+      "createFailedWithMessage": "作成失敗: {message}"
+    }
   }
 }
 

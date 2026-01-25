@@ -638,6 +638,116 @@
     "maxLength": "长度不能超过 {max} 个字符",
     "email": "请输入有效的电子邮件地址",
     "url": "请输入有效的 URL"
+  },
+  "project": {
+    "title": "项目管理",
+    "list": "项目列表",
+    "create": "创建项目",
+    "edit": "编辑项目",
+    "delete": "删除项目",
+    "clone": "克隆项目",
+    "pull": "拉取更新",
+    "saving": "保存中...",
+    "saveChanges": "保存修改",
+    "name": "项目名称",
+    "namePlaceholder": "例如：我的项目",
+    "gitUrl": "Git仓库地址",
+    "gitUrlPlaceholder": "https://github.com/user/repo.git",
+    "authType": "认证方式",
+    "authTypeNone": "公开仓库（无需认证）",
+    "authTypeHttps": "HTTPS（Token认证）",
+    "authTypeSsh": "SSH（密钥认证）",
+    "httpsUsername": "用户名（可选）",
+    "httpsUsernamePlaceholder": "git",
+    "httpsToken": "Token",
+    "httpsTokenPlaceholder": "ghp_xxxx...",
+    "httpsTokenHint": "使用GitHub Personal Access Token或其他平台的Token",
+    "sshPrivateKey": "SSH私钥",
+    "sshPrivateKeyPlaceholder": "-----BEGIN OPENSSH PRIVATE KEY-----",
+    "sshPassphrase": "密钥密码（可选）",
+    "sshPassphrasePlaceholder": "如果密钥有密码保护请输入",
+    "branch": "分支",
+    "branchPlaceholder": "main",
+    "fetchBranches": "获取分支",
+    "moreBranches": "+{count} 更多",
+    "status": {
+      "pending": "待克隆",
+      "cloning": "克隆中",
+      "ready": "就绪",
+      "error": "错误"
+    },
+    "noProjects": "暂无项目",
+    "createFirst": "创建您的第一个项目",
+    "lastSync": "同步于",
+    "selectProject": "选择项目",
+    "selectProjectDesc": "选择一个项目来初始化新会话的工作区，或选择\"空白会话\"从头开始。",
+    "blankSession": "空白会话",
+    "blankSessionDesc": "不使用项目，从空白工作区开始",
+    "noReadyProjects": "暂无可用项目",
+    "noReadyProjectsHint": "请先创建并克隆项目",
+    "cloneSuccess": "项目克隆成功",
+    "pullSuccess": "项目更新成功",
+    "createSuccess": "项目创建成功",
+    "deleteSuccess": "项目删除成功",
+    "saveSuccess": "项目保存成功",
+    "error": {
+      "nameRequired": "项目名称为必填项",
+      "gitUrlRequired": "Git仓库地址为必填项",
+      "cloneFailed": "克隆项目失败",
+      "pullFailed": "拉取更新失败",
+      "createFailed": "创建项目失败",
+      "updateFailed": "更新项目失败",
+      "deleteFailed": "删除项目失败",
+      "fetchBranchesFailed": "获取分支列表失败"
+    }
+  },
+  "share": {
+    "title": "分享会话",
+    "tabs": {
+      "create": "创建分享",
+      "manage": "管理分享"
+    },
+    "createSuccessTitle": "分享创建成功！",
+    "createSuccessDesc": "复制下方链接分享给他人",
+    "copyLink": "复制链接",
+    "accessPassword": "访问密码",
+    "expiresAt": "过期时间",
+    "createNew": "创建新分享",
+    "form": {
+      "title": "分享标题（可选）",
+      "titlePlaceholder": "给分享起个名字...",
+      "password": "访问密码",
+      "passwordPlaceholder": "设置4位以上密码",
+      "passwordHint": "密码将用于保护分享内容，请妥善保管",
+      "expiration": "过期时间（可选）",
+      "expirationOptions": {
+        "never": "永不过期",
+        "1h": "1小时后",
+        "24h": "24小时后",
+        "7d": "7天后",
+        "30d": "30天后"
+      }
+    },
+    "creating": "创建中...",
+    "createLink": "创建分享链接",
+    "noShares": "暂无分享记录",
+    "createFirst": "创建第一个分享",
+    "status": {
+      "inactive": "已停用",
+      "expired": "已过期",
+      "active": "有效"
+    },
+    "createdAt": "创建时间",
+    "viewCount": "访问次数",
+    "viewLink": "查看链接",
+    "refreshSnapshot": "刷新快照（同步最新聊天记录）",
+    "linkLabel": "分享链接",
+    "passwordHiddenHint": "密码在创建时显示，出于安全考虑无法再次查看",
+    "error": {
+      "passwordTooShort": "密码长度不能少于4位",
+      "createFailed": "创建分享失败",
+      "createFailedWithMessage": "创建失败: {message}"
+    }
   }
 }
 

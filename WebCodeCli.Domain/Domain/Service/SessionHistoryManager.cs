@@ -1,22 +1,24 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.JSInterop;
 using WebCodeCli.Domain.Common.Extensions;
 using WebCodeCli.Domain.Domain.Model;
 using WebCodeCli.Domain.Domain.Exceptions;
+using WebCodeCli.Domain.Repositories.Base.ChatSession;
 
 namespace WebCodeCli.Domain.Domain.Service;
 
 /// <summary>
-/// 会话历史管理器
+/// 会话历史管理器 - 使用 SQLite 后端存储
 /// </summary>
 [ServiceDescription(typeof(ISessionHistoryManager), ServiceLifetime.Scoped)]
 public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
 {
-    private readonly IJSRuntime _jsRuntime;
+    private readonly IChatSessionRepository _sessionRepository;
+    private readonly IChatMessageRepository _messageRepository;
+    private readonly IUserContextService _userContextService;
     private readonly ILogger<SessionHistoryManager> _logger;
-    private const string StorageKey = "webcli_sessions"; // 仅用于迁移
+    
     private const int MaxMessagesPerSession = 1000;
     private const int MaxTitleLength = 100;
     private const int SaveDebounceMs = 500;
@@ -31,13 +33,17 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
     private readonly ConcurrentDictionary<string, SessionHistory> _sessionCache = new();
     private List<SessionHistory>? _allSessionsCache = null;
     private DateTime _cacheTimestamp = DateTime.MinValue;
-    private readonly TimeSpan _cacheExpiration = TimeSpan.FromSeconds(10); // 增加缓存时间以提升性能
+    private readonly TimeSpan _cacheExpiration = TimeSpan.FromSeconds(10);
 
     public SessionHistoryManager(
-        IJSRuntime jsRuntime,
+        IChatSessionRepository sessionRepository,
+        IChatMessageRepository messageRepository,
+        IUserContextService userContextService,
         ILogger<SessionHistoryManager> logger)
     {
-        _jsRuntime = jsRuntime;
+        _sessionRepository = sessionRepository;
+        _messageRepository = messageRepository;
+        _userContextService = userContextService;
         _logger = logger;
     }
 
@@ -58,12 +64,14 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
                 return _allSessionsCache;
             }
 
-            var sessions = await _jsRuntime.InvokeAsync<List<SessionHistory>>(
-                "webCliIndexedDB.loadSessions");
+            var username = _userContextService.GetCurrentUsername();
+            var sessionEntities = await _sessionRepository.GetByUsernameOrderByUpdatedAtAsync(username);
             
-            if (sessions == null)
+            var sessions = new List<SessionHistory>();
+            foreach (var entity in sessionEntities)
             {
-                sessions = new List<SessionHistory>();
+                var messages = await _messageRepository.GetBySessionIdAndUsernameAsync(entity.SessionId, username);
+                sessions.Add(MapToSessionHistory(entity, messages));
             }
 
             // 更新缓存
@@ -80,39 +88,11 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
             var loadTime = (DateTime.Now - startTime).TotalMilliseconds;
             _logger.LogInformation("成功加载 {Count} 个会话，耗时: {Time:F2}ms", sessions.Count, loadTime);
             
-            // 记录性能指标
-            try
-            {
-                await _jsRuntime.InvokeVoidAsync("sessionPerformance.recordSessionOperation", 
-                    "load", sessions.Count, loadTime);
-            }
-            catch
-            {
-                // 忽略性能记录错误
-            }
-            
             return sessions;
-        }
-        catch (JSException ex)
-        {
-            _logger.LogError(ex, "加载会话列表失败");
-            
-            // 尝试清空损坏的数据
-            try
-            {
-                await _jsRuntime.InvokeVoidAsync("webCliIndexedDB.clearAllSessions");
-                _logger.LogWarning("已清空损坏的会话数据");
-            }
-            catch (Exception clearEx)
-            {
-                _logger.LogError(clearEx, "清空损坏数据失败");
-            }
-            
-            return new List<SessionHistory>();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "加载会话列表时发生未知错误");
+            _logger.LogError(ex, "加载会话列表失败");
             return new List<SessionHistory>();
         }
     }
@@ -200,68 +180,48 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
             // 更新时间戳
             session.UpdatedAt = DateTime.Now;
 
-            // 直接保存单个会话到 IndexedDB（无需加载所有会话）
-            var success = await _jsRuntime.InvokeAsync<bool>(
-                "webCliIndexedDB.saveSession", session);
+            var username = _userContextService.GetCurrentUsername();
+            
+            // 保存会话实体
+            var sessionEntity = MapToSessionEntity(session, username);
+            var sessionSuccess = await _sessionRepository.InsertOrUpdateAsync(sessionEntity);
 
-            if (success)
-            {
-                // 更新缓存
-                _sessionCache[session.SessionId] = session;
-                
-                // 更新全局缓存中的会话
-                if (_allSessionsCache != null)
-                {
-                    var existingIndex = _allSessionsCache.FindIndex(s => s.SessionId == session.SessionId);
-                    if (existingIndex >= 0)
-                    {
-                        _allSessionsCache[existingIndex] = session;
-                    }
-                    else
-                    {
-                        _allSessionsCache.Add(session);
-                    }
-                }
-                
-                var saveTime = (DateTime.Now - startTime).TotalMilliseconds;
-                _logger.LogDebug("会话 {SessionId} 保存成功，耗时: {Time:F2}ms", session.SessionId, saveTime);
-                
-                // 记录性能指标
-                try
-                {
-                    var sessionCount = _allSessionsCache?.Count ?? 0;
-                    await _jsRuntime.InvokeVoidAsync("sessionPerformance.recordSessionOperation", 
-                        "save", sessionCount, saveTime);
-                }
-                catch
-                {
-                    // 忽略性能记录错误
-                }
-            }
-            else
+            if (!sessionSuccess)
             {
                 _logger.LogWarning("会话 {SessionId} 保存失败", session.SessionId);
                 throw new InvalidOperationException("保存会话失败，请稍后重试");
             }
-        }
-        catch (JSException ex) when (ex.Message.Contains("QuotaExceededError"))
-        {
-            _logger.LogWarning(ex, "IndexedDB 空间不足，无法保存会话 {SessionId}", session.SessionId);
+
+            // 删除旧消息并保存新消息
+            await _messageRepository.DeleteBySessionIdAndUsernameAsync(session.SessionId, username);
             
-            // 抛出特定的异常类型，便于上层捕获和处理
-            throw new QuotaExceededException("存储空间不足，请删除一些旧会话以释放空间", ex);
+            if (session.Messages != null && session.Messages.Count > 0)
+            {
+                var messageEntities = session.Messages.Select(m => MapToMessageEntity(m, session.SessionId, username)).ToList();
+                await _messageRepository.InsertMessagesAsync(messageEntities);
+            }
+
+            // 更新缓存
+            _sessionCache[session.SessionId] = session;
+            
+            // 更新全局缓存中的会话
+            if (_allSessionsCache != null)
+            {
+                var existingIndex = _allSessionsCache.FindIndex(s => s.SessionId == session.SessionId);
+                if (existingIndex >= 0)
+                {
+                    _allSessionsCache[existingIndex] = session;
+                }
+                else
+                {
+                    _allSessionsCache.Insert(0, session);
+                }
+            }
+            
+            var saveTime = (DateTime.Now - startTime).TotalMilliseconds;
+            _logger.LogDebug("会话 {SessionId} 保存成功，耗时: {Time:F2}ms", session.SessionId, saveTime);
         }
-        catch (JSException ex)
-        {
-            _logger.LogError(ex, "保存会话 {SessionId} 时发生 JavaScript 错误", session.SessionId);
-            throw new InvalidOperationException($"保存会话失败: {ex.Message}", ex);
-        }
-        catch (QuotaExceededException)
-        {
-            // 重新抛出 QuotaExceededException
-            throw;
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not InvalidOperationException && ex is not QuotaExceededException)
         {
             _logger.LogError(ex, "保存会话 {SessionId} 失败", session.SessionId);
             throw new InvalidOperationException($"保存会话失败: {ex.Message}", ex);
@@ -280,8 +240,13 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
 
         try
         {
-            // 直接从 IndexedDB 删除
-            var success = await _jsRuntime.InvokeAsync<bool>("webCliIndexedDB.deleteSession", sessionId);
+            var username = _userContextService.GetCurrentUsername();
+            
+            // 删除消息
+            await _messageRepository.DeleteBySessionIdAndUsernameAsync(sessionId, username);
+            
+            // 删除会话
+            var success = await _sessionRepository.DeleteByIdAndUsernameAsync(sessionId, username);
 
             if (success)
             {
@@ -326,14 +291,18 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
                 return cachedSession;
             }
 
-            // 从存储加载
-            var sessions = await LoadSessionsAsync();
-            var session = sessions.FirstOrDefault(s => s.SessionId == sessionId);
-
-            if (session != null)
+            var username = _userContextService.GetCurrentUsername();
+            var sessionEntity = await _sessionRepository.GetByIdAndUsernameAsync(sessionId, username);
+            
+            if (sessionEntity == null)
             {
-                _sessionCache[sessionId] = session;
+                return null;
             }
+
+            var messages = await _messageRepository.GetBySessionIdAndUsernameAsync(sessionId, username);
+            var session = MapToSessionHistory(sessionEntity, messages);
+
+            _sessionCache[sessionId] = session;
 
             return session;
         }
@@ -490,7 +459,6 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
                 _pendingSession = null;
                 
                 // 注意：这里不能使用 await，因为在 lock 中
-                // 我们将在 finally 中处理
                 _ = SaveSessionImmediateAsync(sessionToSave);
             }
         }
@@ -504,4 +472,57 @@ public class SessionHistoryManager : ISessionHistoryManager, IAsyncDisposable
 
         GC.SuppressFinalize(this);
     }
+
+    #region 映射方法
+
+    private SessionHistory MapToSessionHistory(ChatSessionEntity entity, List<ChatMessageEntity> messageEntities)
+    {
+        return new SessionHistory
+        {
+            SessionId = entity.SessionId,
+            Title = entity.Title ?? "新会话",
+            WorkspacePath = entity.WorkspacePath ?? string.Empty,
+            ToolId = entity.ToolId ?? string.Empty,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt,
+            IsWorkspaceValid = entity.IsWorkspaceValid,
+            ProjectId = entity.ProjectId,
+            Messages = messageEntities.Select(m => new ChatMessage
+            {
+                Role = m.Role,
+                Content = m.Content ?? string.Empty,
+                CreatedAt = m.CreatedAt
+            }).ToList()
+        };
+    }
+
+    private ChatSessionEntity MapToSessionEntity(SessionHistory session, string username)
+    {
+        return new ChatSessionEntity
+        {
+            SessionId = session.SessionId,
+            Username = username,
+            Title = session.Title,
+            WorkspacePath = session.WorkspacePath,
+            ToolId = session.ToolId,
+            CreatedAt = session.CreatedAt,
+            UpdatedAt = session.UpdatedAt,
+            IsWorkspaceValid = session.IsWorkspaceValid,
+            ProjectId = session.ProjectId
+        };
+    }
+
+    private ChatMessageEntity MapToMessageEntity(ChatMessage message, string sessionId, string username)
+    {
+        return new ChatMessageEntity
+        {
+            SessionId = sessionId,
+            Username = username,
+            Role = message.Role,
+            Content = message.Content,
+            CreatedAt = message.CreatedAt
+        };
+    }
+
+    #endregion
 }

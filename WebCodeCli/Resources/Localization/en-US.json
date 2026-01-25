@@ -640,6 +640,116 @@
     "maxLength": "Maximum length is {max} characters",
     "email": "Please enter a valid email address",
     "url": "Please enter a valid URL"
+  },
+  "project": {
+    "title": "Projects",
+    "list": "Project List",
+    "create": "Create Project",
+    "edit": "Edit Project",
+    "delete": "Delete Project",
+    "clone": "Clone Project",
+    "pull": "Pull Updates",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "name": "Project Name",
+    "namePlaceholder": "e.g. My Project",
+    "gitUrl": "Git Repository URL",
+    "gitUrlPlaceholder": "https://github.com/user/repo.git",
+    "authType": "Authentication",
+    "authTypeNone": "Public Repository (No Auth)",
+    "authTypeHttps": "HTTPS (Token Auth)",
+    "authTypeSsh": "SSH (Key Auth)",
+    "httpsUsername": "Username (optional)",
+    "httpsUsernamePlaceholder": "git",
+    "httpsToken": "Token",
+    "httpsTokenPlaceholder": "ghp_xxxx...",
+    "httpsTokenHint": "Use GitHub Personal Access Token or other platform tokens",
+    "sshPrivateKey": "SSH Private Key",
+    "sshPrivateKeyPlaceholder": "-----BEGIN OPENSSH PRIVATE KEY-----",
+    "sshPassphrase": "Key Passphrase (optional)",
+    "sshPassphrasePlaceholder": "Enter if your key is password protected",
+    "branch": "Branch",
+    "branchPlaceholder": "main",
+    "fetchBranches": "Fetch Branches",
+    "moreBranches": "+{count} more",
+    "status": {
+      "pending": "Pending",
+      "cloning": "Cloning",
+      "ready": "Ready",
+      "error": "Error"
+    },
+    "noProjects": "No projects",
+    "createFirst": "Create your first project",
+    "lastSync": "Synced",
+    "selectProject": "Select Project",
+    "selectProjectDesc": "Select a project to initialize the workspace for your new session, or choose 'Blank Session' to start from scratch.",
+    "blankSession": "Blank Session",
+    "blankSessionDesc": "Start with an empty workspace without any project",
+    "noReadyProjects": "No available projects",
+    "noReadyProjectsHint": "Please create and clone a project first",
+    "cloneSuccess": "Project cloned successfully",
+    "pullSuccess": "Project updated successfully",
+    "createSuccess": "Project created successfully",
+    "deleteSuccess": "Project deleted successfully",
+    "saveSuccess": "Project saved successfully",
+    "error": {
+      "nameRequired": "Project name is required",
+      "gitUrlRequired": "Git repository URL is required",
+      "cloneFailed": "Failed to clone project",
+      "pullFailed": "Failed to pull updates",
+      "createFailed": "Failed to create project",
+      "updateFailed": "Failed to update project",
+      "deleteFailed": "Failed to delete project",
+      "fetchBranchesFailed": "Failed to fetch branches"
+    }
+  },
+  "share": {
+    "title": "Share Session",
+    "tabs": {
+      "create": "Create Share",
+      "manage": "Manage Shares"
+    },
+    "createSuccessTitle": "Share created successfully!",
+    "createSuccessDesc": "Copy the link below to share with others",
+    "copyLink": "Copy link",
+    "accessPassword": "Access password",
+    "expiresAt": "Expires at",
+    "createNew": "Create a new share",
+    "form": {
+      "title": "Share title (optional)",
+      "titlePlaceholder": "Give your share a name...",
+      "password": "Access password",
+      "passwordPlaceholder": "Set a password with at least 4 characters",
+      "passwordHint": "Password protects the shared content. Keep it safe.",
+      "expiration": "Expiration (optional)",
+      "expirationOptions": {
+        "never": "Never",
+        "1h": "In 1 hour",
+        "24h": "In 24 hours",
+        "7d": "In 7 days",
+        "30d": "In 30 days"
+      }
+    },
+    "creating": "Creating...",
+    "createLink": "Create share link",
+    "noShares": "No share records",
+    "createFirst": "Create your first share",
+    "status": {
+      "inactive": "Disabled",
+      "expired": "Expired",
+      "active": "Active"
+    },
+    "createdAt": "Created at",
+    "viewCount": "Views",
+    "viewLink": "View link",
+    "refreshSnapshot": "Refresh snapshot (sync latest chat)",
+    "linkLabel": "Share link",
+    "passwordHiddenHint": "The password is only shown at creation and cannot be viewed again",
+    "error": {
+      "passwordTooShort": "Password must be at least 4 characters",
+      "createFailed": "Failed to create share",
+      "createFailedWithMessage": "Create failed: {message}"
+    }
   }
 }
 

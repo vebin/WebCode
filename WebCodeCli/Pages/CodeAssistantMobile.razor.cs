@@ -29,6 +29,8 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
     [Inject] private ISessionHistoryManager SessionHistoryManager { get; set; } = default!;
     [Inject] private ILocalizationService L { get; set; } = default!;
     [Inject] private WebCodeCli.Domain.Domain.Service.ISkillService SkillService { get; set; } = default!;
+    [Inject] private ISessionOutputService SessionOutputService { get; set; } = default!;
+    [Inject] private IUserContextService UserContextService { get; set; } = default!;
     
     #endregion
     
@@ -1204,33 +1206,6 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
         QueueSaveOutputState();
     }
 
-    private async Task<bool> IsIndexedDbReadyAsync()
-    {
-        try
-        {
-            if (await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady"))
-            {
-                return true;
-            }
-
-            var retries = 30;
-            while (retries-- > 0)
-            {
-                await Task.Delay(100);
-                if (await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady"))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
     private void QueueSaveOutputState(bool forceImmediate = false)
     {
         if (_disposed)
@@ -1309,13 +1284,8 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
             var state = BuildOutputPanelStateSnapshot(sessionId);
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveSessionOutput", state);
+            await SessionOutputService.SaveAsync(state);
         }
         catch
         {
@@ -1332,12 +1302,7 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
-            var state = await JSRuntime.InvokeAsync<OutputPanelState?>("webCliIndexedDB.getSessionOutput", sessionId);
+            var state = await SessionOutputService.GetBySessionIdAsync(sessionId);
             if (state == null)
             {
                 return;
@@ -1388,12 +1353,7 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.deleteSessionOutput", sessionId);
+            await SessionOutputService.DeleteBySessionIdAsync(sessionId);
         }
         catch
         {
@@ -2279,6 +2239,30 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
                 NavigationManager.NavigateTo("/login");
                 return;
             }
+        }
+        
+        // 设置用户上下文（用于后端服务按用户隔离数据）
+        // 无论认证是否启用，都需要设置用户上下文
+        try
+        {
+            // 尝试从 sessionStorage 获取用户名
+            var storedUsername = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "username");
+            if (!string.IsNullOrWhiteSpace(storedUsername))
+            {
+                _currentUsername = storedUsername;
+                UserContextService.SetCurrentUsername(storedUsername);
+                Console.WriteLine($"[用户上下文] 从sessionStorage设置当前用户: {storedUsername}");
+            }
+            else
+            {
+                // 如果没有存储的用户名，使用 UserContextService 的默认值
+                var defaultUsername = UserContextService.GetCurrentUsername();
+                Console.WriteLine($"[用户上下文] 使用默认用户: {defaultUsername}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[用户上下文] 设置用户上下文失败: {ex.Message}");
         }
         
         // 加载工具列表

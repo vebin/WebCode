@@ -29,7 +29,7 @@
     }
 </button>
 
-<div class="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden" @key="_currentLanguage">
+<div id="code-assistant-split-container" class="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden" @key="_currentLanguage">
     <!-- 会话列表侧边栏（桌面端） -->
     @if (_showSessionList)
     {
@@ -349,8 +349,8 @@
         </div>
     }
     
-     <!-- 右侧预览区 -->
-    <div class="@(_isPreviewCollapsed ? "hidden lg:flex" : "flex") flex-1 bg-white/60 backdrop-blur-sm p-3 sm:p-4 lg:p-6 flex-col overflow-hidden min-w-0 transition-all duration-300 relative">
+    <!-- 右侧预览区 -->
+    <div id="code-assistant-preview-panel" class="@(_isPreviewCollapsed ? "hidden lg:flex" : "flex") flex-1 bg-white/60 backdrop-blur-sm p-3 sm:p-4 lg:p-6 flex-col overflow-hidden min-w-0 lg:min-w-[420px] transition-all duration-300 relative">
         <!-- Tabs -->
         <div class="mb-3 sm:mb-4 lg:mb-5 border-b-2 border-gray-200 flex-shrink-0 bg-white/80 rounded-t-lg sm:rounded-t-xl -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 overflow-x-auto overflow-y-hidden">
             <nav class="-mb-0.5 flex space-x-1 min-w-max">
@@ -780,7 +780,7 @@
                                 </div>
                             </div>
                         }
-                        else if (_availablePreviewRoots.Any() && !_detectedFrontendProjects.Any())
+                        else if (_availablePreviewRoots.Any() && !_detectedFrontendProjects.Any() && string.IsNullOrEmpty(_selectedHtmlFile))
                         {
                             <!-- 没有检测到前端项目的提示 -->
                             <div class="p-4 m-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -835,8 +835,11 @@
         </div>
     </div>
    
+    <!-- PC 端拖拽分隔条 -->
+    <div id="code-assistant-splitter" class="hidden lg:flex w-1 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 cursor-col-resize transition-colors" role="separator" aria-orientation="vertical"></div>
+
     <!-- 左侧聊天区 -->
-    <div class="@(_isPreviewCollapsed ? "h-full" : "max-h-[50vh]") w-full lg:w-[600px] bg-white/80 backdrop-blur-sm p-3 sm:p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col overflow-hidden shadow-lg lg:max-h-full transition-all duration-300">
+    <div id="code-assistant-chat-panel" class="@(_isPreviewCollapsed ? "h-full" : "max-h-[50vh]") w-full lg:flex-shrink-0 bg-white/80 backdrop-blur-sm p-3 sm:p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col overflow-hidden shadow-lg lg:max-h-full transition-all duration-300" style="@GetChatPanelStyle()">
         <!-- 用户信息栏 -->
         @if (_showUserInfo)
         {
@@ -940,6 +943,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span class="hidden sm:inline">@T("codeAssistant.sessionHistory")</span>
+            </button>
+            <button @onclick="ShowProjectManageModal" 
+                    class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]"
+                    title="@T("project.title")">
+                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                </svg>
+                <span class="hidden sm:inline">@T("project.title")</span>
             </button>
             <button @onclick="ToggleContextPanel" 
                     class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]"
@@ -1951,3 +1962,9 @@
 
 <!-- 会话分享模态框 -->
 <ShareSessionModal @ref="_shareSessionModal" SessionId="@_sessionId" />
+
+<!-- 项目管理模态框 -->
+<ProjectManageModal @ref="_projectManageModal" OnProjectsChanged="OnProjectsChanged" />
+
+<!-- 项目选择模态框 -->
+<ProjectSelectModal @ref="_projectSelectModal" OnProjectSelected="OnProjectSelected" />

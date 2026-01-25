@@ -12,6 +12,7 @@ public partial class TemplateLibraryModal : ComponentBase
 {
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     [Inject] private ILocalizationService L { get; set; } = default!;
+    [Inject] private IPromptTemplateService PromptTemplateService { get; set; } = default!;
 
     [Parameter] public EventCallback<PromptTemplate> OnTemplateSelected { get; set; }
 
@@ -57,44 +58,17 @@ public partial class TemplateLibraryModal : ComponentBase
 
         try
         {
-            // 等待 IndexedDB 准备就绪（最多等待 3 秒）
-            var maxRetries = 30;
-            var retryCount = 0;
-
-            while (retryCount < maxRetries)
+            // 从后端加载模板
+            var templates = await PromptTemplateService.GetAllAsync();
+            if (templates != null && templates.Count > 0)
             {
-                try
-                {
-                    var isReady = await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady");
-                    if (isReady)
-                    {
-                        break;
-                    }
-                }
-                catch
-                {
-                    // 继续等待
-                }
-
-                await Task.Delay(100); // 等待 100ms
-                retryCount++;
-            }
-
-            if (retryCount >= maxRetries)
-            {
-                Console.WriteLine($"⚠️ IndexedDB 未就绪，无法加载模板（等待超时）");
-                _templates = new List<PromptTemplate>();
-                return;
-            }
-
-            var templates = await JSRuntime.InvokeAsync<PromptTemplate[]>("webCliIndexedDB.getAllTemplates");
-            if (templates != null && templates.Length > 0)
-            {
-                _templates = templates.ToList();
+                _templates = templates;
             }
             else
             {
-                _templates = new List<PromptTemplate>();
+                // 如果后端没有模板，初始化默认模板
+                await PromptTemplateService.InitDefaultTemplatesAsync();
+                _templates = await PromptTemplateService.GetAllAsync();
             }
 
             FilterTemplates();
@@ -253,7 +227,7 @@ public partial class TemplateLibraryModal : ComponentBase
     {
         try
         {
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveTemplate", template);
+            await PromptTemplateService.SaveAsync(template);
         }
         catch (Exception ex)
         {
@@ -270,7 +244,7 @@ public partial class TemplateLibraryModal : ComponentBase
 
         try
         {
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.deleteTemplate", template.Id);
+            await PromptTemplateService.DeleteAsync(template.Id);
             _templates.Remove(template);
             FilterTemplates();
         }
@@ -458,4 +432,3 @@ public partial class TemplateLibraryModal : ComponentBase
         public string Description { get; set; } = string.Empty;
     }
 }
-

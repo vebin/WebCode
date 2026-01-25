@@ -29,6 +29,7 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
     [Inject] private ISessionHistoryManager SessionHistoryManager { get; set; } = default!;
     [Inject] private ILocalizationService L { get; set; } = default!;
     [Inject] private WebCodeCli.Domain.Domain.Service.ISkillService SkillService { get; set; } = default!;
+    [Inject] private ISessionOutputService SessionOutputService { get; set; } = default!;
     
     #endregion
     
@@ -1309,13 +1310,8 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
             var state = BuildOutputPanelStateSnapshot(sessionId);
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveSessionOutput", state);
+            await SessionOutputService.SaveAsync(state);
         }
         catch
         {
@@ -1332,12 +1328,7 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
-            var state = await JSRuntime.InvokeAsync<OutputPanelState?>("webCliIndexedDB.getSessionOutput", sessionId);
+            var state = await SessionOutputService.GetBySessionIdAsync(sessionId);
             if (state == null)
             {
                 return;
@@ -1388,12 +1379,7 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.deleteSessionOutput", sessionId);
+            await SessionOutputService.DeleteBySessionIdAsync(sessionId);
         }
         catch
         {

@@ -1,0 +1,220 @@
+using Microsoft.AspNetCore.Mvc;
+using WebCodeCli.Domain.Domain.Model;
+using WebCodeCli.Domain.Domain.Service;
+
+namespace WebCodeCli.Controllers;
+
+/// <summary>
+/// 会话管理 API 控制器
+/// </summary>
+[ApiController]
+[Route("api/session")]
+public class SessionController : ControllerBase
+{
+    private readonly ISessionHistoryManager _sessionHistoryManager;
+    private readonly ISessionOutputService _sessionOutputService;
+    private readonly ILogger<SessionController> _logger;
+
+    public SessionController(
+        ISessionHistoryManager sessionHistoryManager,
+        ISessionOutputService sessionOutputService,
+        ILogger<SessionController> logger)
+    {
+        _sessionHistoryManager = sessionHistoryManager;
+        _sessionOutputService = sessionOutputService;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// 获取所有会话
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<List<SessionSummaryDto>>> GetSessions()
+    {
+        try
+        {
+            var sessions = await _sessionHistoryManager.LoadSessionsAsync();
+            var summaries = sessions.Select(s => new SessionSummaryDto
+            {
+                SessionId = s.SessionId,
+                Title = s.Title,
+                WorkspacePath = s.WorkspacePath,
+                ToolId = s.ToolId,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt,
+                IsWorkspaceValid = s.IsWorkspaceValid,
+                MessageCount = s.Messages?.Count ?? 0
+            }).ToList();
+            
+            return Ok(summaries);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取会话列表失败");
+            return StatusCode(500, new { Error = "获取会话列表失败" });
+        }
+    }
+
+    /// <summary>
+    /// 获取单个会话（含消息）
+    /// </summary>
+    [HttpGet("{sessionId}")]
+    public async Task<ActionResult<SessionHistory>> GetSession(string sessionId)
+    {
+        try
+        {
+            var session = await _sessionHistoryManager.GetSessionAsync(sessionId);
+            
+            if (session == null)
+            {
+                return NotFound(new { Error = "会话不存在" });
+            }
+            
+            return Ok(session);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取会话失败: {SessionId}", sessionId);
+            return StatusCode(500, new { Error = "获取会话失败" });
+        }
+    }
+
+    /// <summary>
+    /// 创建或更新会话
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult> SaveSession([FromBody] SessionHistory session)
+    {
+        try
+        {
+            if (session == null || string.IsNullOrWhiteSpace(session.SessionId))
+            {
+                return BadRequest(new { Error = "无效的会话数据" });
+            }
+            
+            await _sessionHistoryManager.SaveSessionImmediateAsync(session);
+            return Ok(new { Success = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "保存会话失败: {SessionId}", session?.SessionId);
+            return StatusCode(500, new { Error = "保存会话失败" });
+        }
+    }
+
+    /// <summary>
+    /// 更新会话
+    /// </summary>
+    [HttpPut("{sessionId}")]
+    public async Task<ActionResult> UpdateSession(string sessionId, [FromBody] SessionHistory session)
+    {
+        try
+        {
+            if (session == null || sessionId != session.SessionId)
+            {
+                return BadRequest(new { Error = "无效的会话数据" });
+            }
+            
+            await _sessionHistoryManager.SaveSessionImmediateAsync(session);
+            return Ok(new { Success = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "更新会话失败: {SessionId}", sessionId);
+            return StatusCode(500, new { Error = "更新会话失败" });
+        }
+    }
+
+    /// <summary>
+    /// 删除会话
+    /// </summary>
+    [HttpDelete("{sessionId}")]
+    public async Task<ActionResult> DeleteSession(string sessionId)
+    {
+        try
+        {
+            await _sessionHistoryManager.DeleteSessionAsync(sessionId);
+            
+            // 同时删除输出状态
+            await _sessionOutputService.DeleteBySessionIdAsync(sessionId);
+            
+            return Ok(new { Success = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "删除会话失败: {SessionId}", sessionId);
+            return StatusCode(500, new { Error = "删除会话失败" });
+        }
+    }
+
+    /// <summary>
+    /// 获取会话输出状态
+    /// </summary>
+    [HttpGet("{sessionId}/output")]
+    public async Task<ActionResult<OutputPanelState>> GetSessionOutput(string sessionId)
+    {
+        try
+        {
+            var output = await _sessionOutputService.GetBySessionIdAsync(sessionId);
+            
+            if (output == null)
+            {
+                return NotFound(new { Error = "输出状态不存在" });
+            }
+            
+            return Ok(output);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取会话输出状态失败: {SessionId}", sessionId);
+            return StatusCode(500, new { Error = "获取输出状态失败" });
+        }
+    }
+
+    /// <summary>
+    /// 保存会话输出状态
+    /// </summary>
+    [HttpPut("{sessionId}/output")]
+    public async Task<ActionResult> SaveSessionOutput(string sessionId, [FromBody] OutputPanelState state)
+    {
+        try
+        {
+            if (state == null)
+            {
+                return BadRequest(new { Error = "无效的输出状态数据" });
+            }
+            
+            state.SessionId = sessionId;
+            var success = await _sessionOutputService.SaveAsync(state);
+            
+            if (success)
+            {
+                return Ok(new { Success = true });
+            }
+            else
+            {
+                return StatusCode(500, new { Error = "保存输出状态失败" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "保存会话输出状态失败: {SessionId}", sessionId);
+            return StatusCode(500, new { Error = "保存输出状态失败" });
+        }
+    }
+}
+
+/// <summary>
+/// 会话摘要 DTO
+/// </summary>
+public class SessionSummaryDto
+{
+    public string SessionId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string WorkspacePath { get; set; } = string.Empty;
+    public string ToolId { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public bool IsWorkspaceValid { get; set; }
+    public int MessageCount { get; set; }
+}

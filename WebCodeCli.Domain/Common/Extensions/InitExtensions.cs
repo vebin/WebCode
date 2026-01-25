@@ -78,6 +78,18 @@ namespace WebCodeCli.Domain.Common.Extensions
                 {
                     Console.WriteLine($"初始化会话分享表失败: {ex.Message}");
                 }
+                
+                // 初始化聊天会话相关表和索引
+                try
+                {
+                    Console.WriteLine("开始初始化聊天会话相关表和索引...");
+                    _repository.GetDB().InitializeChatSessionTables();
+                    Console.WriteLine("聊天会话相关表和索引初始化成功");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"初始化聊天会话相关表失败: {ex.Message}");
+                }
             }
         }
 

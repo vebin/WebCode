@@ -39,6 +39,9 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     [Inject] private WebCodeCli.Domain.Domain.Service.ISkillService SkillService { get; set; } = default!;
     [Inject] private ILocalizationService L { get; set; } = default!;
     [Inject] private ISystemSettingsService SystemSettingsService { get; set; } = default!;
+    [Inject] private ISessionOutputService SessionOutputService { get; set; } = default!;
+    [Inject] private IPromptTemplateService PromptTemplateService { get; set; } = default!;
+    [Inject] private IInputHistoryService InputHistoryService { get; set; } = default!;
     
     // 本地化翻译缓存
     private Dictionary<string, string> _translations = new();
@@ -1739,7 +1742,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         // 保存输入历史
         try
         {
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveInputHistory", message);
+            await InputHistoryService.SaveAsync(message);
         }
         catch
         {
@@ -2035,13 +2038,8 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
             var state = BuildOutputPanelStateSnapshot(sessionId);
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveSessionOutput", state);
+            await SessionOutputService.SaveAsync(state);
         }
         catch
         {
@@ -2058,12 +2056,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
 
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
-            var state = await JSRuntime.InvokeAsync<OutputPanelState?>("webCliIndexedDB.getSessionOutput", sessionId);
+            var state = await SessionOutputService.GetBySessionIdAsync(sessionId);
             if (state == null)
             {
                 return;
@@ -2113,12 +2106,7 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
     {
         try
         {
-            if (!await IsIndexedDbReadyAsync())
-            {
-                return;
-            }
-
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.deleteSessionOutput", sessionId);
+            await SessionOutputService.DeleteBySessionIdAsync(sessionId);
         }
         catch
         {
@@ -4900,30 +4888,13 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         {
             var suggestions = new List<Suggestion>();
 
-            // 检查 IndexedDB 是否准备就绪
-            bool isReady = false;
-            try
-            {
-                isReady = await JSRuntime.InvokeAsync<bool>("webCliIndexedDB.isReady");
-            }
-            catch
-            {
-                // IndexedDB 未就绪
-            }
-
-            if (!isReady)
-            {
-                _autoCompleteDropdown?.Hide();
-                return;
-            }
-
             // 检查是否触发模板快速插入（@ 符号）
             if (_inputMessage.Contains("@"))
             {
                 try
                 {
-                    // 从 IndexedDB 获取模板
-                    var templates = await JSRuntime.InvokeAsync<PromptTemplate[]>("webCliIndexedDB.getAllTemplates");
+                    // 从后端获取模板
+                    var templates = await PromptTemplateService.GetAllAsync();
                     if (templates != null)
                     {
                         suggestions.AddRange(templates
@@ -4947,33 +4918,20 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
                 // 从历史记录获取建议
                 try
                 {
-                    var history = await JSRuntime.InvokeAsync<object[]>("webCliIndexedDB.searchInputHistory", _inputMessage, 5);
-                    if (history != null && history.Length > 0)
+                    var history = await InputHistoryService.SearchAsync(_inputMessage, 5);
+                    if (history != null && history.Count > 0)
                     {
                         foreach (var item in history)
                         {
-                            try
+                            if (!string.IsNullOrEmpty(item.Text))
                             {
-                                var json = JsonSerializer.Serialize(item);
-                                var historyItem = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-                                if (historyItem != null && historyItem.ContainsKey("text"))
+                                suggestions.Add(new Suggestion
                                 {
-                                    var text = historyItem["text"].ToString();
-                                    if (!string.IsNullOrEmpty(text))
-                                    {
-                                        suggestions.Add(new Suggestion
-                                        {
-                                            Text = text,
-                                            Description = "历史记录",
-                                            Type = SuggestionType.History,
-                                            UsageCount = 0
-                                        });
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // 忽略解析错误
+                                    Text = item.Text,
+                                    Description = "历史记录",
+                                    Type = SuggestionType.History,
+                                    UsageCount = 0
+                                });
                             }
                         }
                     }

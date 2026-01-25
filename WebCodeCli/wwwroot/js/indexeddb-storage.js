@@ -1636,6 +1636,230 @@ window.webCliIndexedDB = (function() {
         }
     }
 
+    // ==================== IndexedDB 迁移到 SQLite 后端 ====================
+
+    /**
+     * 迁移所有数据到后端 SQLite
+     * @returns {Promise<Object>} 迁移结果
+     */
+    async function migrateToBackend() {
+        console.log('🔄 开始迁移 IndexedDB 数据到后端...');
+        const results = {
+            sessions: { success: false, count: 0 },
+            templates: { success: false, count: 0 },
+            outputs: { success: false, count: 0 },
+            inputHistory: { success: false, count: 0 },
+            quickActions: { success: false, count: 0 },
+            settings: { success: false, count: 0 }
+        };
+
+        try {
+            // 迁移会话
+            const sessions = await loadSessions();
+            if (sessions && sessions.length > 0) {
+                const response = await fetch('/api/migration/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sessions)
+                });
+                const data = await response.json();
+                results.sessions = { success: data.success, count: data.migratedCount || 0 };
+                console.log(`✅ 会话迁移: ${data.migratedCount || 0} 个`);
+            }
+
+            // 迁移模板
+            const templates = await getAllTemplates();
+            if (templates && templates.length > 0) {
+                const response = await fetch('/api/migration/templates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(templates)
+                });
+                const data = await response.json();
+                results.templates = { success: data.success, count: data.migratedCount || 0 };
+                console.log(`✅ 模板迁移: ${data.migratedCount || 0} 个`);
+            }
+
+            // 迁移输出状态
+            const outputs = await getAllSessionOutputs();
+            if (outputs && outputs.length > 0) {
+                const response = await fetch('/api/migration/session-outputs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(outputs)
+                });
+                const data = await response.json();
+                results.outputs = { success: data.success, count: data.migratedCount || 0 };
+                console.log(`✅ 输出状态迁移: ${data.migratedCount || 0} 个`);
+            }
+
+            // 迁移输入历史
+            const inputHistory = await getRecentInputHistory(1000);
+            if (inputHistory && inputHistory.length > 0) {
+                const response = await fetch('/api/migration/input-history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputHistory)
+                });
+                const data = await response.json();
+                results.inputHistory = { success: data.success, count: data.migratedCount || 0 };
+                console.log(`✅ 输入历史迁移: ${data.migratedCount || 0} 条`);
+            }
+
+            // 迁移快捷操作
+            const quickActions = await getAllQuickActions();
+            if (quickActions && quickActions.length > 0) {
+                const response = await fetch('/api/migration/quick-actions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(quickActions)
+                });
+                const data = await response.json();
+                results.quickActions = { success: data.success, count: data.migratedCount || 0 };
+                console.log(`✅ 快捷操作迁移: ${data.migratedCount || 0} 个`);
+            }
+
+            // 迁移设置
+            const settings = await getAllSettings();
+            if (settings && Object.keys(settings).length > 0) {
+                const response = await fetch('/api/migration/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                const data = await response.json();
+                results.settings = { success: data.success, count: data.migratedCount || 0 };
+                console.log(`✅ 设置迁移: ${data.migratedCount || 0} 个`);
+            }
+
+            console.log('✅ IndexedDB 数据迁移完成', results);
+            return { success: true, results };
+        } catch (error) {
+            console.error('❌ 迁移到后端失败:', error);
+            return { success: false, error: error.message, results };
+        }
+    }
+
+    /**
+     * 获取所有会话输出状态（用于迁移）
+     * @returns {Promise<Array>}
+     */
+    async function getAllSessionOutputs() {
+        try {
+            const db = await initDB();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([OUTPUT_STORE], 'readonly');
+                const store = transaction.objectStore(OUTPUT_STORE);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const outputs = request.result || [];
+                    resolve(outputs.map(o => ({
+                        sessionId: o.sessionId,
+                        rawOutput: o.rawOutput || '',
+                        eventsJson: o.eventsJson || JSON.stringify(o.jsonlEvents || []),
+                        displayedEventCount: o.displayedEventCount || 20
+                    })));
+                };
+
+                request.onerror = () => {
+                    console.error('❌ 获取所有输出状态失败:', request.error);
+                    reject(request.error);
+                };
+            });
+        } catch (error) {
+            console.error('❌ 获取所有输出状态失败:', error);
+            return [];
+        }
+    }
+
+    /**
+     * 清理 IndexedDB 所有数据（迁移完成后调用）
+     * @returns {Promise<boolean>}
+     */
+    async function clearAllIndexedDBData() {
+        try {
+            console.log('🗑️ 开始清理 IndexedDB 数据...');
+            
+            await clearAllSessions();
+            await clearAllTemplates();
+            await clearInputHistory();
+            await clearAllQuickActions();
+            
+            // 清理输出状态
+            const db = await initDB();
+            await new Promise((resolve, reject) => {
+                const transaction = db.transaction([OUTPUT_STORE], 'readwrite');
+                const store = transaction.objectStore(OUTPUT_STORE);
+                const request = store.clear();
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => reject(request.error);
+            });
+            
+            // 清理设置
+            await new Promise((resolve, reject) => {
+                const transaction = db.transaction([SETTINGS_STORE], 'readwrite');
+                const store = transaction.objectStore(SETTINGS_STORE);
+                const request = store.clear();
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => reject(request.error);
+            });
+            
+            console.log('✅ IndexedDB 数据已清理');
+            return true;
+        } catch (error) {
+            console.error('❌ 清理 IndexedDB 失败:', error);
+            return false;
+        }
+    }
+
+    /**
+     * 检查迁移状态
+     * @returns {Promise<Object>}
+     */
+    async function checkMigrationStatus() {
+        try {
+            const response = await fetch('/api/migration/status');
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('❌ 检查迁移状态失败:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * 检查是否需要迁移
+     * @returns {Promise<boolean>}
+     */
+    async function needsMigration() {
+        try {
+            const sessions = await loadSessions();
+            const templates = await getAllTemplates();
+            const hasLocalData = (sessions && sessions.length > 0) || 
+                                 (templates && templates.length > 0);
+            
+            if (!hasLocalData) {
+                return false;
+            }
+
+            const status = await checkMigrationStatus();
+            if (!status.success) {
+                return hasLocalData;
+            }
+
+            // 如果后端没有数据但本地有，需要迁移
+            const counts = status.counts || {};
+            const hasBackendData = (counts.sessions || 0) > 0;
+            
+            return hasLocalData && !hasBackendData;
+        } catch (error) {
+            console.error('❌ 检查是否需要迁移失败:', error);
+            return false;
+        }
+    }
+
     // 初始化时自动执行数据迁移和默认模板初始化
     (async function autoInit() {
         try {
@@ -1644,6 +1868,16 @@ window.webCliIndexedDB = (function() {
             await initDefaultTemplates();
             window.webCliIndexedDBReady = true;
             console.log('✅ IndexedDB 已准备就绪');
+            
+            // 检查是否需要迁移到后端
+            const shouldMigrate = await needsMigration();
+            if (shouldMigrate) {
+                console.log('📤 检测到需要迁移数据到后端...');
+                const result = await migrateToBackend();
+                if (result.success) {
+                    console.log('✅ 数据已迁移到后端，本地数据已保留');
+                }
+            }
         } catch (error) {
             console.error('❌ 自动初始化失败:', error);
             window.webCliIndexedDBReady = false;
@@ -1707,6 +1941,13 @@ window.webCliIndexedDB = (function() {
         // 工具函数
         cleanupLocalStorage,
         getLocalStorageInfo,
+        
+        // 迁移到后端 SQLite
+        migrateToBackend,
+        getAllSessionOutputs,
+        clearAllIndexedDBData,
+        checkMigrationStatus,
+        needsMigration,
         
         // 检查是否准备就绪
         isReady: () => window.webCliIndexedDBReady === true

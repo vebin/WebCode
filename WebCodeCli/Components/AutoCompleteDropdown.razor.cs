@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using WebCodeCli.Domain.Domain.Service;
 
 namespace WebCodeCli.Components;
 
 public partial class AutoCompleteDropdown : ComponentBase
 {
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private IInputHistoryService InputHistoryService { get; set; } = default!;
 
     [Parameter] public EventCallback<string> OnSuggestionSelected { get; set; }
     [Parameter] public string TargetElementId { get; set; } = "input-message";
@@ -107,7 +109,7 @@ public partial class AutoCompleteDropdown : ComponentBase
     {
         try
         {
-            await JSRuntime.InvokeVoidAsync("webCliIndexedDB.saveInputHistory", text);
+            await InputHistoryService.SaveAsync(text);
         }
         catch (Exception ex)
         {
